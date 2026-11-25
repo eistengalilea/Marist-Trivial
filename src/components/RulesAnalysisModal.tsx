@@ -3,6 +3,7 @@ import { X, Eye, Compass, Layers, ArrowRightLeft, Trophy } from 'lucide-react';
 import { CATEGORIES, CATEGORY_ORDER } from '../game/boardTopology';
 import type { HighlightFilter } from '../game/types';
 import { CategoryEmblemSvg } from './CategoryEmblemSvg';
+import { useI18n } from '../i18n/I18nContext';
 
 interface RulesAnalysisModalProps {
   open: boolean;
@@ -17,6 +18,8 @@ export const RulesAnalysisModal: React.FC<RulesAnalysisModalProps> = ({
   onSelectFilter,
   onClose,
 }) => {
+  const { m } = useI18n();
+  const r = m.rules;
   if (!open) return null;
 
   const inspectOnBoard = (filter: HighlightFilter) => {
@@ -38,17 +41,17 @@ export const RulesAnalysisModal: React.FC<RulesAnalysisModalProps> = ({
               id="rules-modal-title"
               className="text-xl font-semibold text-ink-50 tracking-tight"
             >
-              Análisis de normas y arquitectura del tablero
+              {r.title}
             </h2>
             <p className="text-xs text-ink-400 mt-0.5">
-              Tablero cuadrado de 79 casillas · 6 categorías temáticas
+              {r.subtitle}
             </p>
           </div>
           <button
             type="button"
             onClick={onClose}
             className="p-2 rounded-lg text-ink-400 hover:text-white hover:bg-white/8 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400"
-            aria-label="Cerrar análisis de normas"
+            aria-label={r.closeAria}
           >
             <X className="w-5 h-5" />
           </button>
@@ -61,11 +64,11 @@ export const RulesAnalysisModal: React.FC<RulesAnalysisModalProps> = ({
             <div className="flex items-center gap-2 mb-3">
               <Layers className="w-4 h-4 text-gold-400 shrink-0" />
               <h3 className="text-base font-semibold text-ink-100">
-                1. Estructura geométrica del tablero cuadrado (79 casillas)
+                {r.s1}
               </h3>
             </div>
             <p className="text-ink-300 mb-4">
-              El tablero cuadrado de Marist Trivial combina un circuito perimetral de 48 casillas (12 pasos por lado) con seis radios rectos que convergen en la casilla central. Pulsa cualquier grupo para iluminarlo sobre el tablero:
+              {r.s1Body}
             </p>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -79,8 +82,8 @@ export const RulesAnalysisModal: React.FC<RulesAnalysisModalProps> = ({
                 }`}
               >
                 <div>
-                  <div className="font-medium text-ink-100">Casilla Central</div>
-                  <div className="text-xs text-ink-400 mt-0.5">Punto de partida y meta final</div>
+                  <div className="font-medium text-ink-100">{r.hub[0]}</div>
+                  <div className="text-xs text-ink-400 mt-0.5">{r.hub[1]}</div>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="font-mono-tabular text-sm font-semibold text-gold-300">1</span>
@@ -98,8 +101,8 @@ export const RulesAnalysisModal: React.FC<RulesAnalysisModalProps> = ({
                 }`}
               >
                 <div>
-                  <div className="font-medium text-ink-100">Sedes de Quesito (cada 8 pasos)</div>
-                  <div className="text-xs text-ink-400 mt-0.5">Otorgan cuña de color al acertar</div>
+                  <div className="font-medium text-ink-100">{r.hq[0]}</div>
+                  <div className="text-xs text-ink-400 mt-0.5">{r.hq[1]}</div>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="font-mono-tabular text-sm font-semibold text-gold-300">6</span>
@@ -117,8 +120,8 @@ export const RulesAnalysisModal: React.FC<RulesAnalysisModalProps> = ({
                 }`}
               >
                 <div>
-                  <div className="font-medium text-ink-100">Casillas Radiales (6 × 5)</div>
-                  <div className="text-xs text-ink-400 mt-0.5">5 pasos por radio con los otros 5 colores</div>
+                  <div className="font-medium text-ink-100">{r.spokes[0]}</div>
+                  <div className="text-xs text-ink-400 mt-0.5">{r.spokes[1]}</div>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="font-mono-tabular text-sm font-semibold text-gold-300">30</span>
@@ -136,8 +139,8 @@ export const RulesAnalysisModal: React.FC<RulesAnalysisModalProps> = ({
                 }`}
               >
                 <div>
-                  <div className="font-medium text-ink-100">Casillas «Vuelve a tirar»</div>
-                  <div className="text-xs text-ink-400 mt-0.5">Alternadas entre sedes y en 2 esquinas</div>
+                  <div className="font-medium text-ink-100">{r.roll[0]}</div>
+                  <div className="text-xs text-ink-400 mt-0.5">{r.roll[1]}</div>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="font-mono-tabular text-sm font-semibold text-gold-300">6</span>
@@ -155,10 +158,8 @@ export const RulesAnalysisModal: React.FC<RulesAnalysisModalProps> = ({
                 }`}
               >
                 <div>
-                  <div className="font-medium text-ink-100">Casillas de Color en Perímetro Cuadrado (6 × 6)</div>
-                  <div className="text-xs text-ink-400 mt-0.5">
-                    6 colores equilibrados entre cada pareja de Sedes de Quesito (12 casillas por color en total)
-                  </div>
+                  <div className="font-medium text-ink-100">{r.ring[0]}</div>
+                  <div className="text-xs text-ink-400 mt-0.5">{r.ring[1]}</div>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="font-mono-tabular text-sm font-semibold text-gold-300">36</span>
@@ -173,11 +174,11 @@ export const RulesAnalysisModal: React.FC<RulesAnalysisModalProps> = ({
             <div className="flex items-center gap-2 mb-3">
               <Compass className="w-4 h-4 text-gold-400 shrink-0" />
               <h3 className="text-base font-semibold text-ink-100">
-                2. Categorías
+                {r.s2}
               </h3>
             </div>
             <p className="text-ink-300 mb-4">
-              El tablero distribuye las seis categorías de forma simétrica: cada color posee exactamente 1 Sede de Quesito, 6 casillas perimetrales y 5 casillas radiales. Cada categoría se identifica por su color y por un emblema geométrico:
+              {r.s2Body}
             </p>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -203,10 +204,10 @@ export const RulesAnalysisModal: React.FC<RulesAnalysisModalProps> = ({
                     </span>
                     <div className="min-w-0">
                       <div className="font-medium text-ink-100 leading-snug">
-                        {cat.name}
+                        {m.categories[catId].name}
                       </div>
                       <div className="text-xs text-ink-400 truncate">
-                        {cat.colorName} · 12 casillas
+                        {r.catSpaces(m.categories[catId].color)}
                       </div>
                     </div>
                   </button>
@@ -220,26 +221,16 @@ export const RulesAnalysisModal: React.FC<RulesAnalysisModalProps> = ({
             <div className="flex items-center gap-2 mb-3">
               <ArrowRightLeft className="w-4 h-4 text-gold-400 shrink-0" />
               <h3 className="text-base font-semibold text-ink-100">
-                3. Mecánica de turno, bifurcaciones y movimiento
+                {r.s3}
               </h3>
             </div>
             <ul className="space-y-2.5 text-ink-300 list-disc pl-5">
-              <li>
-                <strong className="text-ink-100 font-medium">Inicio en el centro:</strong>{' '}
-                Todas las fichas parten desde la Casilla Central con sus 6 huecos vacíos y tiran el dado (1–6) para salir por cualquiera de los 6 radios.
-              </li>
-              <li>
-                <strong className="text-ink-100 font-medium">Rutas sin retroceso en una tirada:</strong>{' '}
-                El jugador debe avanzar exactamente el número del dado por cualquier camino válido. Puede girar en las sedes exteriores o atravesar el centro hacia otro radio, pero nunca retroceder sobre sus propios pasos dentro del mismo desplazamiento.
-              </li>
-              <li>
-                <strong className="text-ink-100 font-medium">Acierto y conservación de turno:</strong>{' '}
-                Al caer en una casilla de color, se plantea un desafío de ese color. Si acierta, conserva el turno y vuelve a tirar; si falla, el turno pasa al siguiente jugador.
-              </li>
-              <li>
-                <strong className="text-ink-100 font-medium">Vuelve a tirar:</strong>{' '}
-                Las 6 casillas blancas con el símbolo de dado conceden inmediatamente una tirada adicional sin necesidad de responder pregunta.
-              </li>
+              {r.s3Items.map(([title, body]) => (
+                <li key={title}>
+                  <strong className="text-ink-100 font-medium">{title}</strong>{' '}
+                  {body}
+                </li>
+              ))}
             </ul>
           </section>
 
@@ -248,18 +239,16 @@ export const RulesAnalysisModal: React.FC<RulesAnalysisModalProps> = ({
             <div className="flex items-center gap-2 mb-2.5">
               <Trophy className="w-4 h-4 text-gold-400 shrink-0" />
               <h3 className="text-base font-semibold text-ink-100">
-                4. Duración, niveles, quesitos y condición de victoria
+                {r.s4}
               </h3>
             </div>
             <ul className="space-y-2.5 text-ink-300 list-disc pl-5">
-              <li>
-                <strong className="text-ink-100 font-medium">Partida Rápida, Media o Larga:</strong>{' '}
-                Al iniciar partida eliges cuántas preguntas acertadas del mismo color se necesitan para conseguir cada quesito: 1 en Rápida, 2 en Media o 4 en Larga. El nivel (Fácil, Medio o Difícil) regula la dificultad de las tarjetas. Pulsa sobre cualquier jugador en el marcador superior para ver cuántas preguntas le faltan por color.
-              </li>
-              <li>
-                <strong className="text-ink-100 font-medium">Asalto final a la Casilla Central:</strong>{' '}
-                Reunidos los 6 quesitos de colores, el jugador debe regresar exactamente a la Casilla Central (sin pasarse en la tirada) y superar el desafío final para proclamarse vencedor.
-              </li>
+              {r.s4Items.map(([title, body]) => (
+                <li key={title}>
+                  <strong className="text-ink-100 font-medium">{title}</strong>{' '}
+                  {body}
+                </li>
+              ))}
             </ul>
           </section>
         </div>
@@ -268,8 +257,8 @@ export const RulesAnalysisModal: React.FC<RulesAnalysisModalProps> = ({
         <div className="flex items-center justify-between px-6 py-3.5 border-t border-white/10 bg-sunken">
           <div className="text-xs text-ink-400">
             {activeFilter === 'none'
-              ? 'Vista normal del tablero 3D activa'
-              : 'Filtro visual activo sobre el tablero 3D'}
+              ? r.normalView
+              : r.filterView}
           </div>
           <div className="flex items-center gap-2.5">
             {activeFilter !== 'none' && (
@@ -278,7 +267,7 @@ export const RulesAnalysisModal: React.FC<RulesAnalysisModalProps> = ({
                 onClick={() => onSelectFilter('none')}
                 className="px-3.5 py-2 text-xs font-medium rounded-lg bg-white/8 text-ink-200 hover:bg-white/14 transition-colors whitespace-nowrap"
               >
-                Limpiar resaltado
+                {r.clear}
               </button>
             )}
             <button
@@ -286,7 +275,7 @@ export const RulesAnalysisModal: React.FC<RulesAnalysisModalProps> = ({
               onClick={onClose}
               className="px-4 py-2 text-xs font-semibold rounded-lg bg-gold-400 text-ink-950 hover:bg-gold-300 transition-colors whitespace-nowrap"
             >
-              Volver al tablero 3D
+              {r.back}
             </button>
           </div>
         </div>

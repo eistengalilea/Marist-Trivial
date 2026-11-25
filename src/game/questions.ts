@@ -750,7 +750,7 @@ export const QUESTION_BANK: TriviaQuestion[] = [
     prompt: "¿Cuál es el símbolo químico del oro en la tabla periódica?",
     options: ["Ag", "Or", "Au", "Fe"],
     correctIndex: 2,
-    explanation: "Au proviene del término latino «aurum», que significa «amanecer brillante».",
+    explanation: "Au proviene de «aurum», el nombre latino del oro.",
   },
   {
     id: 'cn2',
