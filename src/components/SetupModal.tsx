@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import { X, Users, Bot, User, Gauge, Clock, Square, Circle, Sun, Moon, SunMoon } from 'lucide-react';
+import { X, Users, Bot, User, Gauge, Clock, Square, Circle, Sun, Moon, SunMoon, Timer, Trophy } from 'lucide-react';
 import {
   BOARD_LAYOUTS,
   type BoardLayout,
   DIFFICULTY_ORDER,
+  GAME_MODES,
   MATCH_LENGTH_CONFIGS,
   MATCH_LENGTH_ORDER,
 } from '../game/boardTopology';
-import type { DifficultyLevel, MatchLength, PlayerConfig } from '../game/types';
+import type { DifficultyLevel, GameMode, MatchLength, PlayerConfig } from '../game/types';
 import { useI18n } from '../i18n/I18nContext';
 import type { GameTheme } from '../theme/palette';
 
@@ -30,12 +31,14 @@ interface SetupModalProps {
   initialMatchLength: MatchLength;
   initialLayout: BoardLayout;
   initialTheme: GameTheme;
+  initialMode: GameMode;
   onStartGame: (
     players: PlayerConfig[],
     difficulty: DifficultyLevel,
     matchLength: MatchLength,
     layout: BoardLayout,
     theme: GameTheme,
+    mode: GameMode,
   ) => void;
   onClose: () => void;
 }
@@ -47,6 +50,7 @@ export const SetupModal: React.FC<SetupModalProps> = ({
   initialMatchLength,
   initialLayout,
   initialTheme,
+  initialMode,
   onStartGame,
   onClose,
 }) => {
@@ -58,6 +62,7 @@ export const SetupModal: React.FC<SetupModalProps> = ({
     useState<MatchLength>(initialMatchLength);
   const [layout, setLayout] = useState<BoardLayout>(initialLayout);
   const [theme, setTheme] = useState<GameTheme>(initialTheme);
+  const [mode, setMode] = useState<GameMode>(initialMode);
   const [drafts, setDrafts] = useState<PlayerConfig[]>(() =>
     BASE_DEFAULTS.map((b, i) => initialPlayers[i] ?? { ...b, name: m.defaultPlayer(i + 1) }),
   );
@@ -68,6 +73,7 @@ export const SetupModal: React.FC<SetupModalProps> = ({
       setMatchLength(initialMatchLength);
       setLayout(initialLayout);
       setTheme(initialTheme);
+      setMode(initialMode);
       setCount(initialPlayers.length || 2);
       setDrafts(
         BASE_DEFAULTS.map(
@@ -75,7 +81,7 @@ export const SetupModal: React.FC<SetupModalProps> = ({
         ),
       );
     }
-  }, [open, initialDifficulty, initialMatchLength, initialLayout, initialTheme, initialPlayers, m]);
+  }, [open, initialDifficulty, initialMatchLength, initialLayout, initialTheme, initialMode, initialPlayers, m]);
 
   if (!open) return null;
 
@@ -90,7 +96,7 @@ export const SetupModal: React.FC<SetupModalProps> = ({
       ...p,
       name: p.name.trim() || m.defaultPlayer(i + 1),
     }));
-    onStartGame(active, difficulty, matchLength, layout, theme);
+    onStartGame(active, difficulty, matchLength, layout, theme, mode);
   };
 
 
@@ -170,6 +176,35 @@ export const SetupModal: React.FC<SetupModalProps> = ({
                 ))}
               </div>
             </div>
+          </div>
+
+          {/* Modo de juego: Clásico o Contrarreloj */}
+          <div>
+            <div className="flex items-center gap-1.5 text-xs font-medium text-ink-400 mb-2">
+              <Timer className="w-3.5 h-3.5 text-gold-400" />
+              <span>{m.setup.mode}</span>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              {GAME_MODES.map((id) => (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => setMode(id)}
+                  aria-pressed={mode === id}
+                  className={`py-2 px-3 rounded-lg text-sm font-medium border transition-colors flex items-center justify-center gap-1.5 ${
+                    mode === id
+                      ? 'bg-gold-400 text-ink-950 border-gold-300 font-semibold'
+                      : 'bg-raised text-ink-300 border-white/10 hover:border-white/25'
+                  }`}
+                >
+                  {id === 'classic' ? <Trophy className="w-3.5 h-3.5" /> : <Timer className="w-3.5 h-3.5" />}
+                  {id === 'classic' ? m.setup.classic : m.setup.timed}
+                </button>
+              ))}
+            </div>
+            <p className="mt-2 text-xs text-ink-400">
+              {mode === 'classic' ? m.setup.classicSummary : m.setup.timedSummary}.
+            </p>
           </div>
 
           {/* Match Length Selector */}

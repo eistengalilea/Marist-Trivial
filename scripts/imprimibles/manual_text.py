@@ -87,7 +87,7 @@ TXT['es'] = dict(
         ('Con moderador', 'Una persona, por ejemplo el docente, no juega: lee todas las preguntas, comprueba las respuestas y lee las explicaciones.'),
         ('Sedes clásicas', 'Solo se gana un quesito acertando en la Sede de su color. Los demás aciertos sirven para conservar el turno. Es más larga y táctica.'),
         ('Sin opciones', 'Quien lee no dice las cuatro opciones y hay que responder de memoria. Se puede aplicar solo a la prueba final.'),
-        ('Contrarreloj', 'Hay 20 segundos para responder. Si se acaba el tiempo, cuenta como fallo.'),
+        ('Contrarreloj', 'Como en el modo Contrarreloj de la pantalla: hay 60 segundos para responder en el nivel Fácil, 30 en el Medio y 20 en el Difícil. Si se acaba el tiempo, cuenta como fallo.'),
     ],
     summary=[
         'Todos empiezan en la Casilla Central.',
@@ -189,7 +189,7 @@ TXT['pt'] = dict(
         ('Com moderador', 'Uma pessoa, por exemplo o professor, não joga: lê todas as perguntas, confirma as respostas e lê as explicações.'),
         ('Sedes clássicas', 'Só se ganha um queijinho acertando na Sede da sua cor. As outras respostas certas servem para manter a vez. É mais longa e tática.'),
         ('Sem opções', 'Quem lê não diz as quatro opções e é preciso responder de memória. Pode aplicar-se só à prova final.'),
-        ('Contrarrelógio', 'Há 20 segundos para responder. Se o tempo acabar, conta como resposta errada.'),
+        ('Contrarrelógio', 'Como no modo Contrarrelógio do ecrã: há 60 segundos para responder no nível Fácil, 30 no Médio e 20 no Difícil. Se o tempo acabar, conta como resposta errada.'),
     ],
     summary=[
         'Todos começam na Casa Central.',
@@ -291,7 +291,7 @@ TXT['gl'] = dict(
         ('Con moderador', 'Unha persoa, por exemplo o docente, non xoga: le todas as preguntas, comproba as respostas e le as explicacións.'),
         ('Sedes clásicas', 'Só se gaña un quesiño acertando na Sede da súa cor. Os demais acertos serven para conservar a quenda. É máis longa e táctica.'),
         ('Sen opcións', 'Quen le non di as catro opcións e hai que responder de memoria. Pódese aplicar só á proba final.'),
-        ('Contrarreloxo', 'Hai 20 segundos para responder. Se se acaba o tempo, conta como fallo.'),
+        ('Contrarreloxo', 'Como no modo Contrarreloxo da pantalla: hai 60 segundos para responder no nivel Fácil, 30 no Medio e 20 no Difícil. Se se acaba o tempo, conta como fallo.'),
     ],
     summary=[
         'Todos comezan na Casa Central.',

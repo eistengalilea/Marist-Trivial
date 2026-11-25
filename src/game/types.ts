@@ -45,6 +45,9 @@ export interface BoardSpace {
 
 export type DifficultyLevel = 'easy' | 'medium' | 'hard';
 
+/** Clásico: sin límite de tiempo. Contrarreloj: cronómetro en cada pregunta. */
+export type GameMode = 'classic' | 'timed';
+
 export interface DifficultyConfig {
   id: DifficultyLevel;
   label: string;

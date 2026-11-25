@@ -2,6 +2,7 @@ import type {
   BoardSpace,
   CategoryColorId,
   CategoryConfig,
+  GameMode,
   DifficultyConfig,
   DifficultyLevel,
   MatchLength,
@@ -9,6 +10,11 @@ import type {
 } from './types';
 
 export const DIFFICULTY_ORDER: DifficultyLevel[] = ['easy', 'medium', 'hard'];
+
+export const GAME_MODES: GameMode[] = ['classic', 'timed'];
+
+/** Segundos para responder en el modo Contrarreloj, según la dificultad de la pregunta. */
+export const TIMED_SECONDS: Record<DifficultyLevel, number> = { easy: 60, medium: 30, hard: 20 };
 
 export const DIFFICULTY_CONFIGS: Record<DifficultyLevel, DifficultyConfig> = {
   easy: {
