@@ -3,13 +3,13 @@ import { X, CheckCircle2, MapPin } from 'lucide-react';
 import {
   CATEGORIES,
   CATEGORY_ORDER,
-  DIFFICULTY_CONFIGS,
   MATCH_LENGTH_CONFIGS,
   TRIVIAL_BOARD,
   countPlayerWedges,
 } from '../game/boardTopology';
 import type { DifficultyLevel, MatchLength, PlayerState } from '../game/types';
 import { CategoryEmblemSvg, WedgeWheelSvg } from './CategoryEmblemSvg';
+import { spaceLabel, useI18n } from '../i18n/I18nContext';
 
 interface PlayerProgressModalProps {
   players: PlayerState[];
@@ -28,16 +28,15 @@ export const PlayerProgressModal: React.FC<PlayerProgressModalProps> = ({
   onSelectPlayer,
   onClose,
 }) => {
+  const { m } = useI18n();
   if (!selectedPlayerId) return null;
   const player = players.find((p) => p.id === selectedPlayerId);
   if (!player) return null;
 
-  const diffConfig = DIFFICULTY_CONFIGS[difficulty];
-  const lengthConfig = MATCH_LENGTH_CONFIGS[matchLength];
-  const required = lengthConfig.questionsPerWedge;
+  const required = MATCH_LENGTH_CONFIGS[matchLength].questionsPerWedge;
   const wedgesDone = countPlayerWedges(player.wedges);
-  const currentSpaceLabel =
-    TRIVIAL_BOARD.spaceMap.get(player.spaceId)?.label ?? 'Casilla Central';
+  const currentSpace = TRIVIAL_BOARD.spaceMap.get(player.spaceId);
+  const currentSpaceLabel = currentSpace ? spaceLabel(currentSpace, m) : m.spaces.hub;
 
   return (
     <div
@@ -74,7 +73,7 @@ export const PlayerProgressModal: React.FC<PlayerProgressModalProps> = ({
                 </span>
                 <span>·</span>
                 <span className="font-mono-tabular text-gold-300 font-medium">
-                  {wedgesDone}/6 quesitos
+                  {m.wedgesCount(wedgesDone)}
                 </span>
               </div>
             </div>
@@ -84,7 +83,7 @@ export const PlayerProgressModal: React.FC<PlayerProgressModalProps> = ({
             type="button"
             onClick={onClose}
             className="p-2 rounded-lg text-ink-400 hover:text-white hover:bg-white/8 transition-colors shrink-0"
-            aria-label="Cerrar progreso del jugador"
+            aria-label={m.progress.closeAria}
           >
             <X className="w-5 h-5" />
           </button>
@@ -123,11 +122,13 @@ export const PlayerProgressModal: React.FC<PlayerProgressModalProps> = ({
         {/* Per-Category Breakdown */}
         <div className="flex-1 overflow-y-auto custom-scroll p-6 space-y-4">
           <div className="flex items-center justify-between gap-2 flex-wrap text-xs text-ink-400">
-            <span>Progreso por categoría para completar quesitos</span>
+            <span>{m.progress.heading}</span>
             <span className="font-medium text-ink-300">
-              Partida {lengthConfig.label} ({required}{' '}
-              {required === 1 ? 'pregunta' : 'preguntas'}/quesito) · Nivel{' '}
-              {diffConfig.label}
+              {m.progress.match(
+                m.length[matchLength].label,
+                m.perWedge(required),
+                m.difficulty[difficulty].label,
+              )}
             </span>
           </div>
 
@@ -163,21 +164,21 @@ export const PlayerProgressModal: React.FC<PlayerProgressModalProps> = ({
                       </span>
                       <div className="min-w-0">
                         <div className="text-sm font-medium text-white truncate">
-                          {cat.name}
+                          {m.categories[catId].name}
                         </div>
                         <div className="text-[11px] text-ink-400">
                           {hasWedge ? (
                             <span className="inline-flex items-center gap-1 text-leaf-300 font-medium">
                               <CheckCircle2 className="w-3 h-3" />
-                              Quesito completado
+                              {m.progress.wedgeDone}
                             </span>
                           ) : remaining === 1 ? (
                             <span className="text-gold-300 font-medium">
-                              Falta 1 pregunta para el quesito
+                              {m.progress.missingOne}
                             </span>
                           ) : (
                             <span>
-                              Faltan {remaining} preguntas para el quesito
+                              {m.progress.missingN(remaining)}
                             </span>
                           )}
                         </div>
@@ -209,17 +210,15 @@ export const PlayerProgressModal: React.FC<PlayerProgressModalProps> = ({
         <div className="flex items-center justify-between gap-3 px-6 py-3.5 border-t border-white/10 bg-sunken">
           <div className="text-xs text-ink-400">
             {wedgesDone === 6
-              ? 'Todos los quesitos completados. Dirígete a la Casilla Central.'
-              : `Faltan ${6 - wedgesDone} ${
-                  6 - wedgesDone === 1 ? 'quesito' : 'quesitos'
-                } para optar al triunfo final.`}
+              ? m.progress.allDone
+              : m.progress.missingWedges(6 - wedgesDone)}
           </div>
           <button
             type="button"
             onClick={onClose}
             className="px-4 py-2 text-xs font-semibold rounded-lg bg-gold-400 text-ink-950 hover:bg-gold-300 transition-colors whitespace-nowrap"
           >
-            Cerrar
+            {m.progress.close}
           </button>
         </div>
       </div>

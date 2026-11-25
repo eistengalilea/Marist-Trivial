@@ -1,21 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { X, Users, Bot, User, Gauge, Clock } from 'lucide-react';
 import {
-  DIFFICULTY_CONFIGS,
   DIFFICULTY_ORDER,
   MATCH_LENGTH_CONFIGS,
   MATCH_LENGTH_ORDER,
 } from '../game/boardTopology';
 import type { DifficultyLevel, MatchLength, PlayerConfig } from '../game/types';
+import { useI18n } from '../i18n/I18nContext';
 
-const TOKEN_FINISHES = [
-  { label: 'Blanco', hex: '#fbf8f3' },
-  { label: 'Amarillo MarCha', hex: '#d5a53c' },
-  { label: 'Naranja MarCha', hex: '#d37d00' },
-  { label: 'Verde MarCha', hex: '#869830' },
-  { label: 'Lila MarCha', hex: '#87689b' },
-  { label: 'Magenta MarCha', hex: '#c6007e' },
-];
+/** Colores de ficha; sus nombres están en `m.setup.finishes`, en el mismo orden. */
+const TOKEN_FINISH_HEX = ['#fbf8f3', '#d5a53c', '#d37d00', '#869830', '#87689b', '#c6007e'];
 
 const BASE_DEFAULTS: PlayerConfig[] = [
   { id: 'p1', name: 'Jugador 1', rimHex: '#fbf8f3', isCpu: false },
@@ -47,13 +41,14 @@ export const SetupModal: React.FC<SetupModalProps> = ({
   onStartGame,
   onClose,
 }) => {
+  const { m } = useI18n();
   const [count, setCount] = useState<number>(initialPlayers.length || 2);
   const [difficulty, setDifficulty] =
     useState<DifficultyLevel>(initialDifficulty);
   const [matchLength, setMatchLength] =
     useState<MatchLength>(initialMatchLength);
   const [drafts, setDrafts] = useState<PlayerConfig[]>(() =>
-    BASE_DEFAULTS.map((b, i) => initialPlayers[i] ?? b),
+    BASE_DEFAULTS.map((b, i) => initialPlayers[i] ?? { ...b, name: m.defaultPlayer(i + 1) }),
   );
 
   useEffect(() => {
@@ -61,9 +56,13 @@ export const SetupModal: React.FC<SetupModalProps> = ({
       setDifficulty(initialDifficulty);
       setMatchLength(initialMatchLength);
       setCount(initialPlayers.length || 2);
-      setDrafts(BASE_DEFAULTS.map((b, i) => initialPlayers[i] ?? b));
+      setDrafts(
+        BASE_DEFAULTS.map(
+          (b, i) => initialPlayers[i] ?? { ...b, name: m.defaultPlayer(i + 1) },
+        ),
+      );
     }
-  }, [open, initialDifficulty, initialMatchLength, initialPlayers]);
+  }, [open, initialDifficulty, initialMatchLength, initialPlayers, m]);
 
   if (!open) return null;
 
@@ -76,13 +75,11 @@ export const SetupModal: React.FC<SetupModalProps> = ({
   const handleConfirm = () => {
     const active = drafts.slice(0, count).map((p, i) => ({
       ...p,
-      name: p.name.trim() || `Jugador ${i + 1}`,
+      name: p.name.trim() || m.defaultPlayer(i + 1),
     }));
     onStartGame(active, difficulty, matchLength);
   };
 
-  const selectedDiffCfg = DIFFICULTY_CONFIGS[difficulty];
-  const selectedLengthCfg = MATCH_LENGTH_CONFIGS[matchLength];
 
   return (
     <div
@@ -96,14 +93,14 @@ export const SetupModal: React.FC<SetupModalProps> = ({
           <div className="flex items-center gap-2.5">
             <Users className="w-5 h-5 text-gold-400" />
             <h2 id="setup-modal-title" className="text-lg font-semibold text-white">
-              Configurar nueva partida
+              {m.setup.title}
             </h2>
           </div>
           <button
             type="button"
             onClick={onClose}
             className="p-2 rounded-lg text-ink-400 hover:text-white hover:bg-white/8 transition-colors"
-            aria-label="Cerrar configuración"
+            aria-label={m.setup.closeAria}
           >
             <X className="w-5 h-5" />
           </button>
@@ -114,7 +111,7 @@ export const SetupModal: React.FC<SetupModalProps> = ({
           <div>
             <div className="flex items-center gap-1.5 text-xs font-medium text-ink-400 mb-2">
               <Clock className="w-3.5 h-3.5 text-gold-400" />
-              <span>Duración de la partida</span>
+              <span>{m.setup.duration}</span>
             </div>
             <div className="grid grid-cols-3 gap-2">
               {MATCH_LENGTH_ORDER.map((lenId) => {
@@ -131,21 +128,20 @@ export const SetupModal: React.FC<SetupModalProps> = ({
                         : 'bg-raised text-ink-300 border-white/10 hover:border-white/25'
                     }`}
                   >
-                    <span>{cfg.label}</span>
+                    <span>{m.length[lenId].label}</span>
                     <span
                       className={`text-[11px] font-normal ${
                         isSelected ? 'text-ink-900/80' : 'text-ink-400'
                       }`}
                     >
-                      {cfg.questionsPerWedge}{' '}
-                      {cfg.questionsPerWedge === 1 ? 'pregunta' : 'preguntas'}/quesito
+                      {m.perWedge(cfg.questionsPerWedge)}
                     </span>
                   </button>
                 );
               })}
             </div>
             <p className="mt-2 text-xs text-ink-400">
-              {selectedLengthCfg.summary}.
+              {m.length[matchLength].summary}.
             </p>
           </div>
 
@@ -153,11 +149,10 @@ export const SetupModal: React.FC<SetupModalProps> = ({
           <div>
             <div className="flex items-center gap-1.5 text-xs font-medium text-ink-400 mb-2">
               <Gauge className="w-3.5 h-3.5 text-gold-400" />
-              <span>Nivel de dificultad</span>
+              <span>{m.setup.difficulty}</span>
             </div>
             <div className="grid grid-cols-3 gap-2">
               {DIFFICULTY_ORDER.map((diffId) => {
-                const cfg = DIFFICULTY_CONFIGS[diffId];
                 const isSelected = difficulty === diffId;
                 return (
                   <button
@@ -170,20 +165,20 @@ export const SetupModal: React.FC<SetupModalProps> = ({
                         : 'bg-raised text-ink-300 border-white/10 hover:border-white/25'
                     }`}
                   >
-                    {cfg.label}
+                    {m.difficulty[diffId].label}
                   </button>
                 );
               })}
             </div>
             <p className="mt-2 text-xs text-ink-400">
-              {selectedDiffCfg.summary}.
+              {m.difficulty[difficulty].summary}.
             </p>
           </div>
 
           {/* Player Count */}
           <div>
             <div className="text-xs font-medium text-ink-400 mb-2">
-              Número de jugadores (hasta 6 fichas)
+              {m.setup.players}
             </div>
             <div className="grid grid-cols-6 gap-2">
               {[1, 2, 3, 4, 5, 6].map((n) => (
@@ -211,19 +206,19 @@ export const SetupModal: React.FC<SetupModalProps> = ({
                 className="flex items-center gap-3 p-3 rounded-lg bg-raised border border-white/8"
               >
                 <div className="flex items-center gap-1.5 shrink-0">
-                  {TOKEN_FINISHES.map((fin) => (
+                  {TOKEN_FINISH_HEX.map((hex, fi) => (
                     <button
-                      key={fin.hex}
+                      key={hex}
                       type="button"
-                      onClick={() => updateDraft(idx, { rimHex: fin.hex })}
-                      title={fin.label}
-                      aria-label={`Color ${fin.label}`}
+                      onClick={() => updateDraft(idx, { rimHex: hex })}
+                      title={m.setup.finishes[fi]}
+                      aria-label={m.setup.colorAria(m.setup.finishes[fi])}
                       className={`w-4 h-4 rounded-full border-2 transition-transform ${
-                        player.rimHex === fin.hex
+                        player.rimHex === hex
                           ? 'border-white scale-115'
                           : 'border-transparent opacity-65 hover:opacity-100'
                       }`}
-                      style={{ backgroundColor: fin.hex }}
+                      style={{ backgroundColor: hex }}
                     />
                   ))}
                 </div>
@@ -234,7 +229,7 @@ export const SetupModal: React.FC<SetupModalProps> = ({
                   maxLength={18}
                   onChange={(e) => updateDraft(idx, { name: e.target.value })}
                   className="flex-1 min-w-0 bg-sunken border border-white/10 rounded-md px-3 py-1.5 text-sm text-white focus:outline-none focus:border-gold-400"
-                  placeholder={`Jugador ${idx + 1}`}
+                  placeholder={m.defaultPlayer(idx + 1)}
                 />
 
                 <button
@@ -254,7 +249,7 @@ export const SetupModal: React.FC<SetupModalProps> = ({
                   ) : (
                     <>
                       <User className="w-3.5 h-3.5" />
-                      <span>Humano</span>
+                      <span>{m.setup.human}</span>
                     </>
                   )}
                 </button>
@@ -269,14 +264,14 @@ export const SetupModal: React.FC<SetupModalProps> = ({
             onClick={onClose}
             className="px-4 py-2 text-xs font-medium rounded-lg text-ink-300 hover:bg-white/8 transition-colors whitespace-nowrap"
           >
-            Cancelar
+            {m.setup.cancel}
           </button>
           <button
             type="button"
             onClick={handleConfirm}
             className="px-4 py-2 text-xs font-semibold rounded-lg bg-gold-400 text-ink-950 hover:bg-gold-300 transition-colors whitespace-nowrap"
           >
-            Comenzar partida
+            {m.setup.start}
           </button>
         </div>
       </div>

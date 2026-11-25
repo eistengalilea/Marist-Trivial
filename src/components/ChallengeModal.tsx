@@ -12,6 +12,7 @@ import type {
   PlayerState,
 } from '../game/types';
 import { CategoryEmblemSvg } from './CategoryEmblemSvg';
+import { localizeQuestion, useI18n } from '../i18n/I18nContext';
 
 const OPTION_LETTERS = ['A', 'B', 'C', 'D'] as const;
 
@@ -32,6 +33,7 @@ export const ChallengeModal: React.FC<ChallengeModalProps> = ({
   onSelectAnswer,
   onConfirmOutcome,
 }) => {
+  const { lang, m } = useI18n();
   if (!challenge || !player) return null;
 
   // Step 1 (if landing on Central Hub without 6 wedges): pick color category
@@ -44,13 +46,13 @@ export const ChallengeModal: React.FC<ChallengeModalProps> = ({
       >
         <div className="w-full max-w-md bg-panel border border-white/12 rounded-xl shadow-2xl p-6">
           <div className="text-xs text-gold-300 font-medium mb-1">
-            {player.name} · Casilla Central
+            {player.name} · {m.spaces.hub}
           </div>
           <h3 className="text-lg font-semibold text-white mb-2">
-            Elige el color de la pregunta
+            {m.challenge.hubTitle}
           </h3>
           <p className="text-xs text-ink-400 mb-5 leading-relaxed">
-            Al caer en la Casilla Central puedes elegir libremente cualquiera de los seis colores para responder la tarjeta.
+            {m.challenge.hubBody}
           </p>
 
           <div className="grid grid-cols-2 gap-2.5">
@@ -72,10 +74,10 @@ export const ChallengeModal: React.FC<ChallengeModalProps> = ({
                   </span>
                   <span className="min-w-0">
                     <span className="block text-sm font-medium text-ink-100 leading-tight">
-                      {cat.name}
+                      {m.categories[catId].name}
                     </span>
                     <span className="block text-[11px] text-ink-400">
-                      {cat.colorName}
+                      {m.categories[catId].color}
                     </span>
                   </span>
                 </button>
@@ -88,8 +90,11 @@ export const ChallengeModal: React.FC<ChallengeModalProps> = ({
   }
 
   const cat = challenge.category ? CATEGORIES[challenge.category] : null;
-  const question = challenge.question;
+  const question = challenge.question
+    ? localizeQuestion(challenge.question, lang)
+    : null;
   if (!cat || !question) return null;
+  const catText = m.categories[cat.id];
 
   const lengthConfig = MATCH_LENGTH_CONFIGS[matchLength];
   const required = lengthConfig.questionsPerWedge;
@@ -106,32 +111,33 @@ export const ChallengeModal: React.FC<ChallengeModalProps> = ({
   const isCorrect = selectedIdx === question.correctIndex;
 
   const titleText = isFinal
-    ? `Prueba Final · ${cat.name}`
+    ? m.challenge.finalTitle(catText.name)
     : isHQ
-      ? `Sede de Quesito · ${cat.name}`
-      : `${cat.name}`;
+      ? m.challenge.hqTitle(catText.name)
+      : catText.name;
 
   const ruleOutcomeText = isCorrect
     ? isFinal
-      ? 'Has superado el desafío final en la Casilla Central.'
+      ? m.challenge.finalWin
       : completesWedgeNow
-        ? `¡Quesito de ${cat.shortName} completado (${required}/${required})! Conservas el turno.`
+        ? m.challenge.wedgeComplete(catText.short, required)
         : !alreadyHasWedge
-          ? `Progreso en ${cat.shortName}: ${projectedProgress}/${required} (${
-              remainingAfterSuccess === 1
-                ? 'falta 1 pregunta'
-                : `faltan ${remainingAfterSuccess} preguntas`
-            }). Conservas el turno.`
-          : 'Respuesta acertada. Conservas el turno y vuelves a tirar.'
-    : 'Respuesta incorrecta. El turno pasa al siguiente jugador.';
+          ? m.challenge.progress(
+              catText.short,
+              projectedProgress,
+              required,
+              m.remaining(remainingAfterSuccess),
+            )
+          : m.challenge.correctKeep
+    : m.challenge.wrongPass;
 
   const continueLabel = isCorrect
     ? isFinal
-      ? 'Proclamar ganador'
+      ? m.challenge.proclaim
       : completesWedgeNow
-        ? `Recoger quesito de ${cat.shortName}`
-        : 'Volver a tirar'
-    : 'Pasar turno';
+        ? m.challenge.collect(catText.short)
+        : m.challenge.rollAgain
+    : m.challenge.passTurn;
 
   return (
     <div
@@ -161,7 +167,7 @@ export const ChallengeModal: React.FC<ChallengeModalProps> = ({
                 </div>
                 <div>
                   <div className="text-xs opacity-90">
-                    Turno de {player.name}
+                    {m.challenge.turnOf(player.name)}
                     {player.isCpu ? ' (CPU)' : ''}
                   </div>
                   <h3 className="text-base font-semibold leading-tight">
@@ -172,7 +178,7 @@ export const ChallengeModal: React.FC<ChallengeModalProps> = ({
               {!isFinal && !alreadyHasWedge && (
                 <span className="text-[11px] font-medium px-2.5 py-1 rounded bg-black/25 whitespace-nowrap font-mono-tabular">
                   {completesWedgeNow
-                    ? 'En juego: Quesito'
+                    ? m.challenge.atStake
                     : `${currentProgress}/${required} · +1`}
                 </span>
               )}
@@ -214,10 +220,10 @@ export const ChallengeModal: React.FC<ChallengeModalProps> = ({
               <div className="mt-5 pt-3 border-t border-white/8 text-xs text-ink-400 flex items-center justify-between">
                 <span>
                   {player.isCpu
-                    ? `${player.name} está eligiendo respuesta…`
-                    : 'Selecciona una opción para girar la tarjeta'}
+                    ? m.challenge.cpuChoosing(player.name)
+                    : m.challenge.selectOption}
                 </span>
-                <span>{cat.name}</span>
+                <span>{catText.name}</span>
               </div>
             </div>
           </div>
@@ -239,10 +245,10 @@ export const ChallengeModal: React.FC<ChallengeModalProps> = ({
                 </div>
                 <div>
                   <div className="text-xs opacity-90">
-                    {player.name} · {cat.name}
+                    {player.name} · {catText.name}
                   </div>
                   <h3 className="text-base font-semibold leading-tight">
-                    {isCorrect ? '¡Respuesta correcta!' : 'Respuesta incorrecta'}
+                    {isCorrect ? m.challenge.correct : m.challenge.wrong}
                   </h3>
                 </div>
               </div>
@@ -313,7 +319,7 @@ export const ChallengeModal: React.FC<ChallengeModalProps> = ({
                   </button>
                 ) : (
                   <span className="text-xs text-ink-400 whitespace-nowrap shrink-0">
-                    Continuando…
+                    {m.challenge.continuing}
                   </span>
                 )}
               </div>
