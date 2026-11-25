@@ -1,6 +1,6 @@
 {
   "name": "Marist Trivial",
-  "description": "Tablero cuadrado 3D/2D animado de Marist Trivial con multijugador hasta 6 jugadores, análisis de normas y seis categorías cromáticas sin nombrar.",
+  "description": "Tablero cuadrado 3D/2D animado de Marist Trivial con multijugador hasta 6 jugadores, análisis de normas y seis categorías temáticas con la identidad de MarCha.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

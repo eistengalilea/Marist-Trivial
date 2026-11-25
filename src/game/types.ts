@@ -16,12 +16,15 @@ export type EmblemKind =
 
 export interface CategoryConfig {
   id: CategoryColorId;
+  /** Nombre completo de la categoría temática. */
+  name: string;
+  /** Versión corta para chips, mensajes y etiquetas del tablero. */
+  shortName: string;
   colorName: string;
   hex: string;
   lightHex: string;
   darkHex: string;
   emblem: EmblemKind;
-  unassignedLabel: string;
 }
 
 export type SpaceKind = 'hub' | 'hq' | 'spoke' | 'ring' | 'roll_again';

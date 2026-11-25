@@ -1,12 +1,70 @@
 @import "tailwindcss";
 
-@layer base {
-  :root {
-    --font-display: "Outfit", system-ui, -apple-system, sans-serif;
-    --font-sans: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
-    --font-mono: "JetBrains Mono", ui-monospace, monospace;
-  }
+/*
+ * Paleta del Manual de la Marca MarCha 2022 (ver src/theme/palette.ts):
+ * azul oscuro #312A4E, lila #87689B, naranja #D37D00, verde #869830,
+ * amarillo #D5A53C. Tipografías: Montserrat (títulos) y Roboto (textos).
+ */
+@theme {
+  --font-display: "Montserrat", system-ui, -apple-system, sans-serif;
+  --font-sans: "Roboto", system-ui, -apple-system, sans-serif;
+  --font-mono: "Roboto", ui-monospace, monospace;
 
+  --color-night: #17132a;
+  --color-panel: #241e3d;
+  --color-raised: #312a4e;
+  --color-raised-hover: #3d3561;
+  --color-sunken: #1c1733;
+
+  --color-gold-50: #fbf6ea;
+  --color-gold-100: #f6eacb;
+  --color-gold-200: #eed598;
+  --color-gold-300: #e4bf68;
+  --color-gold-400: #d5a53c;
+  --color-gold-500: #bf8f2a;
+  --color-gold-600: #9c7420;
+  --color-gold-700: #7a5a1a;
+  --color-gold-800: #5c4415;
+  --color-gold-900: #3f2f10;
+  --color-gold-950: #261c09;
+
+  /* Lila MarCha */
+  --color-lila-100: #efe9f4;
+  --color-lila-200: #d9cde4;
+  --color-lila-300: #b7a3c6;
+  --color-lila-400: #9d83b0;
+  --color-lila-500: #87689b;
+  --color-lila-600: #6e5281;
+  --color-lila-700: #5a4270;
+
+  /* Verde MarCha */
+  --color-leaf-100: #eef2d8;
+  --color-leaf-300: #c2d07a;
+  --color-leaf-400: #a3b54a;
+  --color-leaf-500: #869830;
+  --color-leaf-600: #6b7a24;
+
+  --color-magenta-200: #f6b0d7;
+  --color-magenta-300: #ee7dbe;
+  --color-magenta-400: #e0399d;
+  --color-magenta-500: #c6007e;
+  --color-magenta-600: #a00066;
+
+  /* Neutros con matiz del azul oscuro MarCha para texto sobre fondo oscuro */
+  --color-ink-50: #f6f4fa;
+  --color-ink-100: #ece9f3;
+  --color-ink-200: #d8d3e5;
+  --color-ink-300: #bcb4d0;
+  --color-ink-400: #9c92b5;
+  --color-ink-500: #7b7096;
+  --color-ink-600: #5d5378;
+  --color-ink-700: #463e5e;
+  --color-ink-800: #312a4e;
+  --color-ink-900: #221d38;
+  --color-ink-950: #17132a;
+}
+
+@layer base {
   html,
   body,
   #root {
@@ -16,8 +74,8 @@
     padding: 0;
     overflow: hidden;
     font-family: var(--font-sans);
-    background-color: #0e1117;
-    color: #f1f5f9;
+    background-color: var(--color-night);
+    color: var(--color-ink-50);
   }
 
   h1,
@@ -45,11 +103,11 @@
   background: transparent;
 }
 .custom-scroll::-webkit-scrollbar-thumb {
-  background: rgba(148, 163, 184, 0.25);
+  background: rgba(183, 163, 198, 0.3);
   border-radius: 3px;
 }
 .custom-scroll::-webkit-scrollbar-thumb:hover {
-  background: rgba(148, 163, 184, 0.45);
+  background: rgba(183, 163, 198, 0.5);
 }
 
 /* 3D Card Flip Utilities */

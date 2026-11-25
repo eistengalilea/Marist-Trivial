@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { SCENE_COLORS } from '../theme/palette';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
@@ -23,12 +24,9 @@ import {
 import {
   createContactShadowTexture,
   createFeltTexture,
-  createWalnutWoodTexture,
 } from './proceduralTextures';
 
 // Pre-allocated math helpers for zero-GC tick loop
-const _vec3A = new THREE.Vector3();
-const _vec3B = new THREE.Vector3();
 const _quatA = new THREE.Quaternion();
 const _quatB = new THREE.Quaternion();
 const _eulerA = new THREE.Euler();
@@ -88,6 +86,8 @@ export class TrivialSceneController {
 
   private validDestIds = new Set<string>();
   private hoveredSpaceId: string | null = null;
+  /** Casilla resaltada desde la interfaz (chips de destino del panel). */
+  private previewSpaceId: string | null = null;
   private highlightFilter: HighlightFilter = 'none';
   private activeChallengeCategory: CategoryColorId | null = null;
 
@@ -136,7 +136,7 @@ export class TrivialSceneController {
     });
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    this.renderer.toneMappingExposure = 1.12;
+    this.renderer.toneMappingExposure = 0.92;
     this.renderer.setPixelRatio(
       this.isSoftwareGl ? 1 : Math.min(window.devicePixelRatio, 2),
     );
@@ -149,8 +149,8 @@ export class TrivialSceneController {
     container.appendChild(this.renderer.domElement);
 
     this.scene = new THREE.Scene();
-    this.scene.background = new THREE.Color(0x0e1117);
-    this.scene.fog = new THREE.FogExp2(0x0e1117, 0.012);
+    this.scene.background = new THREE.Color(SCENE_COLORS.night);
+    this.scene.fog = new THREE.FogExp2(SCENE_COLORS.night, 0.012);
 
     this.camera = new THREE.PerspectiveCamera(42, width / height, 0.1, 160);
     this.camera.position.copy(this.desiredCamPos);
@@ -179,10 +179,14 @@ export class TrivialSceneController {
     pmremGenerator.dispose();
 
     // 3-Point Warm/Cool Studio Lighting
-    const hemiLight = new THREE.HemisphereLight(0xa5c0f0, 0x1e1812, 0.9);
+    const hemiLight = new THREE.HemisphereLight(
+      SCENE_COLORS.hemiSky,
+      SCENE_COLORS.hemiGround,
+      0.6,
+    );
     this.scene.add(hemiLight);
 
-    const keyLight = new THREE.DirectionalLight(0xfff1dc, 2.2);
+    const keyLight = new THREE.DirectionalLight(SCENE_COLORS.keyLight, 1.9);
     keyLight.position.set(11, 20, 12);
     keyLight.castShadow = true;
     keyLight.shadow.mapSize.width = 2048;
@@ -198,7 +202,7 @@ export class TrivialSceneController {
     keyLight.shadow.normalBias = 0.02;
     this.scene.add(keyLight);
 
-    const rimLight = new THREE.DirectionalLight(0x93c5fd, 0.9);
+    const rimLight = new THREE.DirectionalLight(SCENE_COLORS.rimLight, 1.0);
     rimLight.position.set(-14, 10, -13);
     this.scene.add(rimLight);
 
@@ -228,7 +232,7 @@ export class TrivialSceneController {
     this.disposables.push(this.shadowTexture);
 
     // Build Walnut & Felt Dice Tray on left side of board
-    this.buildDiceTray(maxAniso);
+    this.buildDiceTray(maxAniso, board.shared.walnutMat);
 
     // Build Physical 3D Die
     const die = createDieMesh();
@@ -259,7 +263,7 @@ export class TrivialSceneController {
     this.scene.add(this.dieShadow);
 
     // Build 3D Card Caddy on right side of square board
-    const caddy = createCardCaddy(maxAniso);
+    const caddy = createCardCaddy(board.shared);
     this.cardCaddy = caddy.visual;
     this.disposables.push(...caddy.disposables);
     this.cardCaddy.group.position.set(14.5, -0.38, 0);
@@ -274,24 +278,21 @@ export class TrivialSceneController {
     this.startLoop();
   }
 
-  private buildDiceTray(maxAnisotropy: number) {
+  private buildDiceTray(
+    maxAnisotropy: number,
+    walnutMat: THREE.MeshStandardMaterial,
+  ) {
     const trayGroup = new THREE.Group();
     trayGroup.position.copy(this.diceTrayPos);
 
-    const walnutTex = createWalnutWoodTexture(maxAnisotropy);
-    const feltTex = createFeltTexture('#1a2a27', maxAnisotropy, 3);
-    const walnutMat = new THREE.MeshStandardMaterial({
-      map: walnutTex,
-      roughness: 0.48,
-      metalness: 0.06,
-    });
+    const feltTex = createFeltTexture(SCENE_COLORS.deckFelt, maxAnisotropy, 3);
     const feltMat = new THREE.MeshStandardMaterial({
       map: feltTex,
       roughness: 0.92,
       metalness: 0.0,
     });
     const brassMat = new THREE.MeshStandardMaterial({
-      color: 0xd9b56c,
+      color: SCENE_COLORS.gold,
       roughness: 0.25,
       metalness: 0.9,
     });
@@ -341,9 +342,7 @@ export class TrivialSceneController {
 
     this.scene.add(trayGroup);
     this.disposables.push(
-      walnutTex,
       feltTex,
-      walnutMat,
       feltMat,
       brassMat,
       outerGeo,
@@ -524,7 +523,7 @@ export class TrivialSceneController {
       return new THREE.Vector3(space.position[0], baseY, space.position[2]);
     }
 
-    const spreadRadius = space.kind === 'hub' ? 0.84 : 0.32;
+    const spreadRadius = space.kind === 'hub' ? 1.02 : 0.32;
     const angle = (idx / count) * Math.PI * 2 + Math.PI / 6;
     return new THREE.Vector3(
       space.position[0] + Math.cos(angle) * spreadRadius,
@@ -539,6 +538,11 @@ export class TrivialSceneController {
       const isValid = this.validDestIds.has(id);
       tv.beaconGroup.visible = isValid;
     });
+  }
+
+  /** Resalta una casilla como si tuviera el puntero encima (desde la UI). */
+  public setPreviewSpace(spaceId: string | null) {
+    this.previewSpaceId = spaceId;
   }
 
   public setHighlightFilter(filter: HighlightFilter) {
@@ -920,6 +924,14 @@ export class TrivialSceneController {
         }
       }
 
+      // El símbolo de MarCha mira siempre a la cámara (solo giro en Y)
+      // y se inclina hacia atrás cuando la cámara está alta (vista cenital/2D)
+      const cam = this.activeCamera.position;
+      const dx = cam.x - tv.group.position.x;
+      const dz = cam.z - tv.group.position.z;
+      const pitch = Math.atan2(cam.y - tv.group.position.y, Math.hypot(dx, dz));
+      tv.logoGroup.rotation.set(-pitch * 0.8, Math.atan2(dx, dz), 0, 'YXZ');
+
       // Drop-in animation for newly earned wedges
       for (const catId of CATEGORY_ORDER) {
         const wMesh = tv.wedges[catId];
@@ -947,7 +959,8 @@ export class TrivialSceneController {
 
     this.tileVisuals.forEach((tv, id) => {
       const isValidDest = this.validDestIds.has(id);
-      const isHovered = this.hoveredSpaceId === id;
+      const isHovered =
+        this.hoveredSpaceId === id || this.previewSpaceId === id;
       const isRuleMatched = this.matchesHighlightFilter(id);
 
       // Float & rotate reachable beacons
@@ -965,12 +978,14 @@ export class TrivialSceneController {
 
       if (isValidDest) {
         targetOpacity = isHovered ? 0.98 : 0.62 + Math.sin(elapsed * 5) * 0.2;
-        ringMat.color.setHex(isHovered ? 0xffffff : 0xfde047);
+        ringMat.color.setHex(
+          isHovered ? SCENE_COLORS.validRingHover : SCENE_COLORS.validRing,
+        );
         targetTileY = isHovered ? tv.baseY + 0.08 : tv.baseY + 0.035;
       } else if (hasFilter) {
         if (isRuleMatched) {
           targetOpacity = 0.88;
-          ringMat.color.setHex(0x38bdf8);
+          ringMat.color.setHex(SCENE_COLORS.filterRing);
           targetTileY = tv.baseY + 0.06;
         } else {
           targetOpacity = 0;
