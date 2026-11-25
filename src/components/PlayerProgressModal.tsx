@@ -48,7 +48,7 @@ export const PlayerProgressModal: React.FC<PlayerProgressModalProps> = ({
       onClick={onClose}
     >
       <div
-        className="w-full max-w-xl max-h-[88vh] flex flex-col bg-[#131722] border border-white/12 rounded-xl shadow-2xl overflow-hidden"
+        className="w-full max-w-xl max-h-[88vh] flex flex-col bg-panel border border-white/12 rounded-xl shadow-2xl overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -67,13 +67,13 @@ export const PlayerProgressModal: React.FC<PlayerProgressModalProps> = ({
                 {player.name}
                 {player.isCpu ? ' · CPU' : ''}
               </h2>
-              <div className="flex items-center gap-2 text-xs text-slate-400 flex-wrap">
+              <div className="flex items-center gap-2 text-xs text-ink-400 flex-wrap">
                 <span className="inline-flex items-center gap-1">
-                  <MapPin className="w-3 h-3 text-amber-400 shrink-0" />
+                  <MapPin className="w-3 h-3 text-gold-400 shrink-0" />
                   <span className="truncate max-w-[200px]">{currentSpaceLabel}</span>
                 </span>
                 <span>·</span>
-                <span className="font-mono-tabular text-amber-300 font-medium">
+                <span className="font-mono-tabular text-gold-300 font-medium">
                   {wedgesDone}/6 quesitos
                 </span>
               </div>
@@ -83,7 +83,7 @@ export const PlayerProgressModal: React.FC<PlayerProgressModalProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/8 transition-colors shrink-0"
+            className="p-2 rounded-lg text-ink-400 hover:text-white hover:bg-white/8 transition-colors shrink-0"
             aria-label="Cerrar progreso del jugador"
           >
             <X className="w-5 h-5" />
@@ -92,7 +92,7 @@ export const PlayerProgressModal: React.FC<PlayerProgressModalProps> = ({
 
         {/* Quick Player Switcher Tabs */}
         {players.length > 1 && (
-          <div className="px-6 py-2.5 border-b border-white/8 bg-[#0f131c] flex items-center gap-2 overflow-x-auto">
+          <div className="px-6 py-2.5 border-b border-white/8 bg-sunken flex items-center gap-2 overflow-x-auto">
             {players.map((p) => {
               const active = p.id === player.id;
               return (
@@ -102,8 +102,8 @@ export const PlayerProgressModal: React.FC<PlayerProgressModalProps> = ({
                   onClick={() => onSelectPlayer(p.id)}
                   className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors whitespace-nowrap shrink-0 ${
                     active
-                      ? 'bg-amber-400/15 border-amber-400/60 text-white'
-                      : 'bg-[#1a202e] border-white/8 text-slate-400 hover:text-slate-200 hover:border-white/20'
+                      ? 'bg-gold-400/15 border-gold-400/60 text-white'
+                      : 'bg-raised border-white/8 text-ink-400 hover:text-ink-200 hover:border-white/20'
                   }`}
                 >
                   <span
@@ -122,9 +122,9 @@ export const PlayerProgressModal: React.FC<PlayerProgressModalProps> = ({
 
         {/* Per-Category Breakdown */}
         <div className="flex-1 overflow-y-auto custom-scroll p-6 space-y-4">
-          <div className="flex items-center justify-between gap-2 flex-wrap text-xs text-slate-400">
+          <div className="flex items-center justify-between gap-2 flex-wrap text-xs text-ink-400">
             <span>Progreso por categoría para completar quesitos</span>
-            <span className="font-medium text-slate-300">
+            <span className="font-medium text-ink-300">
               Partida {lengthConfig.label} ({required}{' '}
               {required === 1 ? 'pregunta' : 'preguntas'}/quesito) · Nivel{' '}
               {diffConfig.label}
@@ -146,8 +146,8 @@ export const PlayerProgressModal: React.FC<PlayerProgressModalProps> = ({
                   key={catId}
                   className={`p-3.5 rounded-lg border transition-colors ${
                     hasWedge
-                      ? 'bg-emerald-500/8 border-emerald-400/35'
-                      : 'bg-[#1a202e] border-white/8'
+                      ? 'bg-leaf-500/8 border-leaf-400/35'
+                      : 'bg-raised border-white/8'
                   }`}
                 >
                   <div className="flex items-center justify-between gap-2.5 mb-2.5">
@@ -165,14 +165,14 @@ export const PlayerProgressModal: React.FC<PlayerProgressModalProps> = ({
                         <div className="text-sm font-medium text-white truncate">
                           Color {cat.colorName}
                         </div>
-                        <div className="text-[11px] text-slate-400">
+                        <div className="text-[11px] text-ink-400">
                           {hasWedge ? (
-                            <span className="inline-flex items-center gap-1 text-emerald-300 font-medium">
+                            <span className="inline-flex items-center gap-1 text-leaf-300 font-medium">
                               <CheckCircle2 className="w-3 h-3" />
                               Quesito completado
                             </span>
                           ) : remaining === 1 ? (
-                            <span className="text-amber-300 font-medium">
+                            <span className="text-gold-300 font-medium">
                               Falta 1 pregunta para el quesito
                             </span>
                           ) : (
@@ -184,7 +184,7 @@ export const PlayerProgressModal: React.FC<PlayerProgressModalProps> = ({
                       </div>
                     </div>
 
-                    <span className="font-mono-tabular text-xs font-semibold text-slate-200 shrink-0">
+                    <span className="font-mono-tabular text-xs font-semibold text-ink-200 shrink-0">
                       {progress}/{required}
                     </span>
                   </div>
@@ -195,7 +195,7 @@ export const PlayerProgressModal: React.FC<PlayerProgressModalProps> = ({
                       className="h-full rounded-full transition-all duration-300"
                       style={{
                         width: `${pct}%`,
-                        backgroundColor: hasWedge ? '#34d399' : cat.hex,
+                        backgroundColor: hasWedge ? '#62a329' : cat.hex,
                       }}
                     />
                   </div>
@@ -206,8 +206,8 @@ export const PlayerProgressModal: React.FC<PlayerProgressModalProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between gap-3 px-6 py-3.5 border-t border-white/10 bg-[#0f131c]">
-          <div className="text-xs text-slate-400">
+        <div className="flex items-center justify-between gap-3 px-6 py-3.5 border-t border-white/10 bg-sunken">
+          <div className="text-xs text-ink-400">
             {wedgesDone === 6
               ? 'Todos los quesitos completados. Dirígete a la Casilla Central.'
               : `Faltan ${6 - wedgesDone} ${
@@ -217,7 +217,7 @@ export const PlayerProgressModal: React.FC<PlayerProgressModalProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 text-xs font-semibold rounded-lg bg-amber-400 text-slate-950 hover:bg-amber-300 transition-colors whitespace-nowrap"
+            className="px-4 py-2 text-xs font-semibold rounded-lg bg-gold-400 text-ink-950 hover:bg-gold-300 transition-colors whitespace-nowrap"
           >
             Cerrar
           </button>

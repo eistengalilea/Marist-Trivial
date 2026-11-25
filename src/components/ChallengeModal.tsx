@@ -42,14 +42,14 @@ export const ChallengeModal: React.FC<ChallengeModalProps> = ({
         role="dialog"
         aria-modal="true"
       >
-        <div className="w-full max-w-md bg-[#131722] border border-white/12 rounded-xl shadow-2xl p-6">
-          <div className="text-xs text-amber-300 font-medium mb-1">
+        <div className="w-full max-w-md bg-panel border border-white/12 rounded-xl shadow-2xl p-6">
+          <div className="text-xs text-gold-300 font-medium mb-1">
             {player.name} · Casilla Central
           </div>
           <h3 className="text-lg font-semibold text-white mb-2">
             Elige el color de la pregunta
           </h3>
-          <p className="text-xs text-slate-400 mb-5 leading-relaxed">
+          <p className="text-xs text-ink-400 mb-5 leading-relaxed">
             Al caer en la Casilla Central puedes elegir libremente cualquiera de los seis colores para responder la tarjeta.
           </p>
 
@@ -62,7 +62,7 @@ export const ChallengeModal: React.FC<ChallengeModalProps> = ({
                   type="button"
                   disabled={player.isCpu}
                   onClick={() => onSelectHubCategory(catId)}
-                  className="flex items-center gap-3 p-3 rounded-lg bg-[#1a202e] border border-white/10 hover:border-white/30 transition-colors text-left disabled:opacity-75"
+                  className="flex items-center gap-3 p-3 rounded-lg bg-raised border border-white/10 hover:border-white/30 transition-colors text-left disabled:opacity-75"
                 >
                   <span
                     className="w-8 h-8 rounded-md flex items-center justify-center text-white shrink-0"
@@ -70,7 +70,7 @@ export const ChallengeModal: React.FC<ChallengeModalProps> = ({
                   >
                     <CategoryEmblemSvg emblem={cat.emblem} className="w-4 h-4" />
                   </span>
-                  <span className="text-sm font-medium text-slate-100">
+                  <span className="text-sm font-medium text-ink-100">
                     {cat.colorName}
                   </span>
                 </button>
@@ -141,7 +141,7 @@ export const ChallengeModal: React.FC<ChallengeModalProps> = ({
           }`}
         >
           {/* ==================== FRONT FACE: QUESTION & OPTIONS ==================== */}
-          <div className="col-start-1 row-start-1 card-face bg-[#131722] border border-white/14 rounded-xl shadow-2xl overflow-hidden flex flex-col">
+          <div className="col-start-1 row-start-1 card-face bg-panel border border-white/14 rounded-xl shadow-2xl overflow-hidden flex flex-col">
             <div
               className="px-6 py-4 flex items-center justify-between text-white"
               style={{ backgroundColor: cat.hex }}
@@ -190,11 +190,11 @@ export const ChallengeModal: React.FC<ChallengeModalProps> = ({
                         onClick={() => onSelectAnswer(idx)}
                         className={`w-full flex items-center gap-3 p-3.5 rounded-lg border text-left transition-colors ${
                           isPicked
-                            ? 'bg-amber-400/20 border-amber-400 text-white'
-                            : 'bg-[#1a202e] border-white/10 text-slate-100 hover:border-amber-400/60 hover:bg-[#202738] disabled:hover:border-white/10 disabled:hover:bg-[#1a202e]'
+                            ? 'bg-gold-400/20 border-gold-400 text-white'
+                            : 'bg-raised border-white/10 text-ink-100 hover:border-gold-400/60 hover:bg-raised-hover disabled:hover:border-white/10 disabled:hover:bg-raised'
                         }`}
                       >
-                        <span className="w-7 h-7 rounded-md bg-white/10 flex items-center justify-center text-xs font-mono-tabular font-semibold text-amber-300 shrink-0">
+                        <span className="w-7 h-7 rounded-md bg-white/10 flex items-center justify-center text-xs font-mono-tabular font-semibold text-gold-300 shrink-0">
                           {OPTION_LETTERS[idx]}
                         </span>
                         <span className="text-sm font-medium leading-snug">
@@ -206,7 +206,7 @@ export const ChallengeModal: React.FC<ChallengeModalProps> = ({
                 </div>
               </div>
 
-              <div className="mt-5 pt-3 border-t border-white/8 text-xs text-slate-400 flex items-center justify-between">
+              <div className="mt-5 pt-3 border-t border-white/8 text-xs text-ink-400 flex items-center justify-between">
                 <span>
                   {player.isCpu
                     ? `${player.name} está eligiendo respuesta…`
@@ -218,10 +218,10 @@ export const ChallengeModal: React.FC<ChallengeModalProps> = ({
           </div>
 
           {/* ==================== BACK FACE: REVEALED ANSWER ==================== */}
-          <div className="col-start-1 row-start-1 card-face card-face-back bg-[#131722] border border-white/14 rounded-xl shadow-2xl overflow-hidden flex flex-col">
+          <div className="col-start-1 row-start-1 card-face card-face-back bg-panel border border-white/14 rounded-xl shadow-2xl overflow-hidden flex flex-col">
             <div
               className={`px-6 py-4 flex items-center justify-between text-white ${
-                isCorrect ? 'bg-emerald-600' : 'bg-rose-600'
+                isCorrect ? 'bg-leaf-600' : 'bg-magenta-600'
               }`}
             >
               <div className="flex items-center gap-3">
@@ -245,7 +245,7 @@ export const ChallengeModal: React.FC<ChallengeModalProps> = ({
 
             <div className="p-6 flex-1 flex flex-col justify-between">
               <div>
-                <p className="text-sm font-medium text-slate-300 mb-4 leading-snug">
+                <p className="text-sm font-medium text-ink-300 mb-4 leading-snug">
                   {question.prompt}
                 </p>
 
@@ -254,13 +254,13 @@ export const ChallengeModal: React.FC<ChallengeModalProps> = ({
                     const isRightOption = idx === question.correctIndex;
                     const isPlayerPick = idx === selectedIdx;
                     let rowStyle =
-                      'bg-[#171c28] border-white/6 text-slate-400 opacity-75';
+                      'bg-sunken border-white/6 text-ink-400 opacity-75';
                     if (isRightOption) {
                       rowStyle =
-                        'bg-emerald-500/15 border-emerald-400/70 text-emerald-100 opacity-100';
+                        'bg-leaf-500/15 border-leaf-400/70 text-leaf-100 opacity-100';
                     } else if (isPlayerPick && !isRightOption) {
                       rowStyle =
-                        'bg-rose-500/15 border-rose-400/60 text-rose-200 opacity-100';
+                        'bg-magenta-500/15 border-magenta-400/60 text-magenta-200 opacity-100';
                     }
 
                     return (
@@ -277,23 +277,23 @@ export const ChallengeModal: React.FC<ChallengeModalProps> = ({
                           </span>
                         </div>
                         {isRightOption && (
-                          <Check className="w-4 h-4 text-emerald-400 shrink-0" />
+                          <Check className="w-4 h-4 text-leaf-400 shrink-0" />
                         )}
                         {isPlayerPick && !isRightOption && (
-                          <X className="w-4 h-4 text-rose-400 shrink-0" />
+                          <X className="w-4 h-4 text-magenta-400 shrink-0" />
                         )}
                       </div>
                     );
                   })}
                 </div>
 
-                <div className="p-3.5 rounded-lg bg-[#1a202e] border border-white/8 text-xs text-slate-300 leading-relaxed">
+                <div className="p-3.5 rounded-lg bg-raised border border-white/8 text-xs text-ink-300 leading-relaxed">
                   {question.explanation}
                 </div>
               </div>
 
               <div className="mt-5 pt-4 border-t border-white/10 flex items-center justify-between gap-3">
-                <div className="text-xs text-slate-200 font-medium">
+                <div className="text-xs text-ink-200 font-medium">
                   {ruleOutcomeText}
                 </div>
 
@@ -301,13 +301,13 @@ export const ChallengeModal: React.FC<ChallengeModalProps> = ({
                   <button
                     type="button"
                     onClick={onConfirmOutcome}
-                    className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-amber-400 hover:bg-amber-300 text-slate-950 text-xs font-semibold transition-colors whitespace-nowrap shrink-0"
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-gold-400 hover:bg-gold-300 text-ink-950 text-xs font-semibold transition-colors whitespace-nowrap shrink-0"
                   >
                     <span>{continueLabel}</span>
                     <ArrowRight className="w-3.5 h-3.5" />
                   </button>
                 ) : (
-                  <span className="text-xs text-slate-400 whitespace-nowrap shrink-0">
+                  <span className="text-xs text-ink-400 whitespace-nowrap shrink-0">
                     Continuando…
                   </span>
                 )}

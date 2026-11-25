@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   BookOpen,
   ChevronDown,
@@ -42,9 +42,13 @@ import { SetupModal } from './components/SetupModal';
 import { PlayerProgressModal } from './components/PlayerProgressModal';
 
 const DEFAULT_PLAYERS: PlayerConfig[] = [
-  { id: 'p1', name: 'Jugador 1', rimHex: '#f1ece1', isCpu: false },
-  { id: 'p2', name: 'Jugador 2', rimHex: '#d4af37', isCpu: true },
+  { id: 'p1', name: 'Jugador 1', rimHex: '#fbf6ea', isCpu: false },
+  { id: 'p2', name: 'Jugador 2', rimHex: '#d5a53c', isCpu: true },
 ];
+
+const HUB_SWATCH = `conic-gradient(${CATEGORY_ORDER.map(
+  (c, i) => `${CATEGORIES[c].hex} ${i * 60}deg ${(i + 1) * 60}deg`,
+).join(', ')})`;
 
 function buildInitialPlayers(configs: PlayerConfig[]): PlayerState[] {
   return configs.map((c) => ({
@@ -116,17 +120,29 @@ export default function App() {
     matchLength,
   };
 
+  /** Saca una pregunta sin repetir y la marca como usada. */
+  const drawQuestion = useCallback((catId: CategoryColorId) => {
+    const q = drawQuestionForColor(
+      catId,
+      stateRef.current.difficulty,
+      usedQuestionIdsRef.current,
+    );
+    usedQuestionIdsRef.current.add(q.id);
+    return q;
+  }, []);
+
   const advanceTurn = useCallback((nextMessage?: string) => {
-    setActivePlayerIdx((prev) => {
-      const next = (prev + 1) % stateRef.current.players.length;
-      const nextPlayer = stateRef.current.players[next];
-      if (nextMessage) {
-        setStatusMessage(`${nextMessage} Turno de ${nextPlayer.name}.`);
-      } else {
-        setStatusMessage(`Turno de ${nextPlayer.name}. Tira el dado.`);
-      }
-      return next;
-    });
+    // Se calcula fuera del actualizador de estado: los actualizadores deben
+    // ser puros (React puede ejecutarlos dos veces en modo estricto).
+    const { players: curPlayers, activePlayerIdx: curIdx } = stateRef.current;
+    const next = (curIdx + 1) % curPlayers.length;
+    const nextPlayer = curPlayers[next];
+    setActivePlayerIdx(next);
+    setStatusMessage(
+      nextMessage
+        ? `${nextMessage} Turno de ${nextPlayer.name}.`
+        : `Turno de ${nextPlayer.name}. Tira el dado.`,
+    );
     setDiceValue(null);
     setValidMoves(new Map());
     setPendingDestId(null);
@@ -189,12 +205,7 @@ export default function App() {
       if (wedgeCount === 6) {
         const randomCat =
           CATEGORY_ORDER[Math.floor(Math.random() * CATEGORY_ORDER.length)];
-        const q = drawQuestionForColor(
-          randomCat,
-          stateRef.current.difficulty,
-          usedQuestionIdsRef.current,
-        );
-        usedQuestionIdsRef.current.add(q.id);
+        const q = drawQuestion(randomCat);
         setPhase('final_challenge');
         setActiveChallenge({
           playerId: player.id,
@@ -230,12 +241,7 @@ export default function App() {
 
     // 3. Standard or HQ colored space
     if (space.category) {
-      const q = drawQuestionForColor(
-        space.category,
-        stateRef.current.difficulty,
-        usedQuestionIdsRef.current,
-      );
-      usedQuestionIdsRef.current.add(q.id);
+      const q = drawQuestion(space.category);
       setPhase('challenge');
       setActiveChallenge({
         playerId: player.id,
@@ -251,7 +257,7 @@ export default function App() {
         `${player.name} cayó en ${space.label}. Responde la pregunta en pantalla.`,
       );
     }
-  }, []);
+  }, [drawQuestion]);
 
   const handleDieSettled = useCallback((value: number) => {
     const { players: curPlayers, activePlayerIdx: curIdx } = stateRef.current;
@@ -333,23 +339,6 @@ export default function App() {
     );
   }, [activeChallenge]);
 
-  // Keyboard shortcut H to toggle bottom controls dock
-  useEffect(() => {
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (
-        e.target instanceof HTMLInputElement ||
-        e.target instanceof HTMLTextAreaElement
-      ) {
-        return;
-      }
-      if (e.key.toLowerCase() === 'h') {
-        setDockCollapsed((prev) => !prev);
-      }
-    };
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
-  }, []);
-
   const triggerRoll = useCallback(() => {
     if (phase !== 'idle' || !activePlayer) return;
     const rolled = Math.floor(Math.random() * 6) + 1;
@@ -362,12 +351,7 @@ export default function App() {
 
   const handleSelectHubCategory = useCallback((catId: CategoryColorId) => {
     soundFX.playUiClick();
-    const q = drawQuestionForColor(
-      catId,
-      stateRef.current.difficulty,
-      usedQuestionIdsRef.current,
-    );
-    usedQuestionIdsRef.current.add(q.id);
+    const q = drawQuestion(catId);
     setActiveChallenge((prev) =>
       prev
         ? {
@@ -380,7 +364,7 @@ export default function App() {
           }
         : null,
     );
-  }, []);
+  }, [drawQuestion]);
 
   const handleSelectAnswer = useCallback((optionIndex: number) => {
     const ch = stateRef.current.activeChallenge;
@@ -676,25 +660,114 @@ export default function App() {
     !setupOpen &&
     inspectedPlayerId === null;
 
+  const isHumanChoosing =
+    phase === 'choosing_move' && !!activePlayer && !activePlayer.isCpu;
+
+  // Destinos alcanzables ordenados (para los chips del panel y atajos 1-9)
+  const destinationOptions = useMemo(
+    () =>
+      Array.from(validMoves.keys())
+        .map((id) => TRIVIAL_BOARD.spaceMap.get(id))
+        .filter((sp): sp is NonNullable<typeof sp> => !!sp),
+    [validMoves],
+  );
+
+  useEffect(() => {
+    if (validMoves.size === 0) sceneRef.current?.setPreviewSpace(null);
+  }, [validMoves]);
+
+  // Atajos de teclado. Se guarda el último manejador en un ref para registrar
+  // el listener una sola vez y leer siempre el estado actual.
+  const keyHandlerRef = useRef<(e: KeyboardEvent) => void>(() => {});
+  keyHandlerRef.current = (e: KeyboardEvent) => {
+    if (
+      e.target instanceof HTMLInputElement ||
+      e.target instanceof HTMLTextAreaElement ||
+      e.metaKey ||
+      e.ctrlKey ||
+      e.altKey
+    ) {
+      return;
+    }
+    const key = e.key.toLowerCase();
+    if (key === 'h') {
+      setDockCollapsed((prev) => !prev);
+      return;
+    }
+    if (rulesOpen || setupOpen || inspectedPlayerId !== null) return;
+
+    const ch = activeChallenge;
+    const humanTurn = !!activePlayer && !activePlayer.isCpu;
+
+    // Tirar el dado: Espacio o Intro
+    if ((key === ' ' || key === 'enter') && canHumanRoll) {
+      e.preventDefault();
+      triggerRoll();
+      return;
+    }
+
+    // Elegir destino: teclas 1-9
+    if (isHumanChoosing && /^[1-9]$/.test(key)) {
+      const dest = destinationOptions[Number(key) - 1];
+      if (dest) {
+        e.preventDefault();
+        soundFX.playUiClick();
+        chooseMovePath(dest.id);
+      }
+      return;
+    }
+
+    if (!ch || !humanTurn) return;
+
+    // Elegir color en la Casilla Central: 1-6
+    if (ch.needsCategoryChoice && !ch.category && /^[1-6]$/.test(key)) {
+      e.preventDefault();
+      handleSelectHubCategory(CATEGORY_ORDER[Number(key) - 1]);
+      return;
+    }
+
+    // Responder: A-D o 1-4
+    if (ch.question && !ch.isRevealed) {
+      const idx = 'abcd'.indexOf(key) >= 0 ? 'abcd'.indexOf(key) : '1234'.indexOf(key);
+      if (key.length === 1 && idx >= 0) {
+        e.preventDefault();
+        handleSelectAnswer(idx);
+      }
+      return;
+    }
+
+    // Continuar tras ver la respuesta: Intro o Espacio
+    if (ch.isRevealed && (key === 'enter' || key === ' ')) {
+      e.preventDefault();
+      handleConfirmOutcome();
+    }
+  };
+
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => keyHandlerRef.current(e);
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, []);
+
   return (
-    <div className="relative w-full h-full overflow-hidden bg-[#0e1117]">
+    <div className="relative w-full h-full overflow-hidden bg-night">
       {/* Isolated 3D WebGL Canvas Mount */}
       <div ref={canvasMountRef} className="fixed inset-0 z-0" />
 
       {/* Graceful WebGL Context Loss Fallback */}
       {contextLost && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0e1117] p-6 text-center">
-          <div className="max-w-sm p-6 rounded-xl bg-[#131722] border border-white/12">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-night p-6 text-center">
+          <div className="max-w-sm p-6 rounded-xl bg-panel border border-white/12">
             <h2 className="text-lg font-semibold text-white mb-2">
               Contexto gráfico interrumpido
             </h2>
-            <p className="text-sm text-slate-400 mb-4">
+            <p className="text-sm text-ink-400 mb-4">
               El visor 3D perdió temporalmente el acceso a WebGL. Recarga la página si no se restaura automáticamente.
             </p>
             <button
               type="button"
               onClick={() => window.location.reload()}
-              className="px-4 py-2 rounded-lg bg-amber-400 text-slate-950 text-sm font-semibold"
+              className="px-4 py-2 rounded-lg bg-gold-400 text-ink-950 text-sm font-semibold"
             >
               Recargar tablero
             </button>
@@ -704,12 +777,12 @@ export default function App() {
 
       {/* Top-Left Minimal Brand & Clickable Player Progress Strip */}
       <header className="fixed top-4 left-4 z-10 pointer-events-none max-w-[calc(100vw-290px)]">
-        <div className="pointer-events-auto inline-flex flex-col gap-2.5 bg-[#131722]/94 border border-white/10 rounded-xl px-4 py-3 shadow-lg">
+        <div className="pointer-events-auto inline-flex flex-col gap-2.5 bg-panel/94 border border-white/10 rounded-xl px-4 py-3 shadow-lg">
           <div className="flex items-baseline gap-3 flex-wrap">
             <h1 className="text-lg font-bold tracking-tight text-white whitespace-nowrap">
               Marist Trivial
             </h1>
-            <span className="text-xs text-slate-400 whitespace-nowrap">
+            <span className="text-xs text-ink-400 whitespace-nowrap">
               Partida {MATCH_LENGTH_CONFIGS[matchLength].label} · Nivel{' '}
               {DIFFICULTY_CONFIGS[difficulty].label} · Clic en un jugador para ver progreso
             </span>
@@ -730,8 +803,8 @@ export default function App() {
                   title="Pulsa para ver cuántas preguntas faltan en cada categoría"
                   className={`flex items-center gap-2 px-2 py-1 rounded-lg border-b-2 transition-colors text-left cursor-pointer ${
                     isActive
-                      ? 'border-amber-400 bg-white/8 text-white hover:bg-white/12'
-                      : 'border-transparent text-slate-300 hover:bg-white/6 hover:text-white'
+                      ? 'border-gold-400 bg-white/8 text-white hover:bg-white/12'
+                      : 'border-transparent text-ink-300 hover:bg-white/6 hover:text-white'
                   }`}
                 >
                   <WedgeWheelSvg
@@ -744,7 +817,7 @@ export default function App() {
                       {p.name}
                       {p.isCpu ? ' · CPU' : ''}
                     </div>
-                    <div className="text-[11px] font-mono-tabular text-slate-400">
+                    <div className="text-[11px] font-mono-tabular text-ink-400">
                       {wedgesDone}/6 quesitos
                     </div>
                   </div>
@@ -763,9 +836,9 @@ export default function App() {
             soundFX.playUiClick();
             setRulesOpen(true);
           }}
-          className="flex items-center gap-2 px-3.5 py-2 rounded-lg bg-[#131722]/94 border border-white/12 hover:border-amber-400/50 text-xs font-medium text-slate-100 transition-colors whitespace-nowrap shadow-lg"
+          className="flex items-center gap-2 px-3.5 py-2 rounded-lg bg-panel/94 border border-white/12 hover:border-gold-400/50 text-xs font-medium text-ink-100 transition-colors whitespace-nowrap shadow-lg"
         >
-          <BookOpen className="w-3.5 h-3.5 text-amber-400" />
+          <BookOpen className="w-3.5 h-3.5 text-gold-400" />
           <span>Normas y tablero</span>
         </button>
         <button
@@ -774,9 +847,9 @@ export default function App() {
             soundFX.playUiClick();
             setSetupOpen(true);
           }}
-          className="flex items-center gap-2 px-3.5 py-2 rounded-lg bg-[#131722]/94 border border-white/12 hover:border-white/30 text-xs font-medium text-slate-100 transition-colors whitespace-nowrap shadow-lg"
+          className="flex items-center gap-2 px-3.5 py-2 rounded-lg bg-panel/94 border border-white/12 hover:border-white/30 text-xs font-medium text-ink-100 transition-colors whitespace-nowrap shadow-lg"
         >
-          <RotateCcw className="w-3.5 h-3.5 text-slate-300" />
+          <RotateCcw className="w-3.5 h-3.5 text-ink-300" />
           <span>Nueva partida</span>
         </button>
       </div>
@@ -792,35 +865,37 @@ export default function App() {
           <button
             type="button"
             onClick={() => setDockCollapsed((v) => !v)}
-            className="flex items-center gap-1.5 px-3 py-1 rounded-t-lg bg-[#131722]/94 border border-b-0 border-white/12 text-[11px] font-medium text-slate-300 hover:text-white transition-colors whitespace-nowrap"
+            className="flex items-center gap-1.5 px-3 py-1 rounded-t-lg bg-panel/94 border border-b-0 border-white/12 text-[11px] font-medium text-ink-300 hover:text-white transition-colors whitespace-nowrap"
             title="Atajo: tecla H"
           >
             {dockCollapsed ? (
               <>
-                <ChevronUp className="w-3.5 h-3.5 text-amber-400" />
+                <ChevronUp className="w-3.5 h-3.5 text-gold-400" />
                 <span>Mostrar controles</span>
               </>
             ) : (
               <>
-                <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+                <ChevronDown className="w-3.5 h-3.5 text-ink-400" />
                 <span>Ocultar controles</span>
               </>
             )}
           </button>
         </div>
 
-        <div className="bg-[#131722]/95 border border-white/12 rounded-xl px-4 py-3 shadow-2xl flex flex-col gap-2.5">
+        <div className="bg-panel/95 border border-white/12 rounded-xl px-4 py-3 shadow-2xl flex flex-col gap-2.5">
           {/* Status & Hover Inspection Line */}
           <div className="flex items-center justify-between gap-4 text-xs border-b border-white/8 pb-2">
-            <div className="text-slate-200 truncate">{statusMessage}</div>
-            <div className="text-slate-400 shrink-0 whitespace-nowrap font-medium">
+            <div className="text-ink-200 truncate">{statusMessage}</div>
+            <div className="text-ink-400 shrink-0 whitespace-nowrap font-medium">
               {hoveredSpace
                 ? hoveredSpace.label
                 : highlightFilter !== 'none'
                   ? 'Filtro de tablero activo'
-                  : cameraPreset === '2d'
-                    ? 'Vista 2D · Arrastra para mover · Rueda para zoom'
-                    : 'Arrastra para orbitar · Rueda para zoom'}
+                  : isHumanChoosing
+                      ? 'Pulsa una casilla o las teclas 1–9'
+                      : cameraPreset === '2d'
+                        ? 'Vista 2D · Arrastra para mover · Rueda para zoom'
+                        : 'Espacio: tirar · H: ocultar panel'}
             </div>
           </div>
 
@@ -834,8 +909,8 @@ export default function App() {
                 disabled={!canHumanRoll}
                 className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-colors whitespace-nowrap shrink-0 ${
                   canHumanRoll
-                    ? 'bg-amber-400 hover:bg-amber-300 text-slate-950'
-                    : 'bg-white/8 text-slate-400 cursor-not-allowed'
+                    ? 'bg-gold-400 hover:bg-gold-300 text-ink-950'
+                    : 'bg-white/8 text-ink-400 cursor-not-allowed'
                 }`}
               >
                 <Dices className="w-4 h-4" />
@@ -843,7 +918,7 @@ export default function App() {
                   {phase === 'rolling'
                     ? 'Lanzando dado…'
                     : phase === 'choosing_move'
-                      ? 'Elige destino en el tablero'
+                      ? 'Elige destino'
                       : phase === 'moving'
                         ? 'Desplazando ficha…'
                         : activePlayer?.isCpu
@@ -853,11 +928,62 @@ export default function App() {
               </button>
 
               {diceValue !== null && (
-                <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#1a202e] border border-white/10">
-                  <span className="text-xs text-slate-400">Dado</span>
-                  <span className="font-mono-tabular text-base font-bold text-amber-300">
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-raised border border-white/10">
+                  <span className="text-xs text-ink-400">Dado</span>
+                  <span className="font-mono-tabular text-base font-bold text-gold-300">
                     {diceValue}
                   </span>
+                </div>
+              )}
+
+              {isHumanChoosing && destinationOptions.length > 0 && (
+                <div
+                  className="flex items-center gap-1.5 flex-wrap"
+                  role="group"
+                  aria-label="Casillas alcanzables"
+                >
+                  {destinationOptions.map((sp, i) => {
+                    const swatch = sp.category
+                      ? CATEGORIES[sp.category].hex
+                      : sp.kind === 'hub'
+                        ? HUB_SWATCH
+                        : '#fbf6ea';
+                    return (
+                      <button
+                        key={sp.id}
+                        type="button"
+                        onClick={() => {
+                          soundFX.playUiClick();
+                          chooseMovePath(sp.id);
+                        }}
+                        onMouseEnter={() => sceneRef.current?.setPreviewSpace(sp.id)}
+                        onMouseLeave={() => sceneRef.current?.setPreviewSpace(null)}
+                        onFocus={() => sceneRef.current?.setPreviewSpace(sp.id)}
+                        onBlur={() => sceneRef.current?.setPreviewSpace(null)}
+                        title={`${sp.label} (tecla ${i + 1})`}
+                        className="flex items-center gap-1.5 pl-1.5 pr-2 py-1 rounded-lg bg-raised border border-white/10 hover:border-gold-400/70 focus-visible:border-gold-400 text-xs text-ink-100 transition-colors whitespace-nowrap"
+                      >
+                        <span className="font-mono-tabular text-[10px] text-ink-400">
+                          {i + 1}
+                        </span>
+                        <span
+                          className="w-3.5 h-3.5 rounded-sm border border-black/20"
+                          style={{ background: swatch }}
+                        />
+                        <span>
+                          {sp.kind === 'hq'
+                            ? 'Sede'
+                            : sp.kind === 'hub'
+                              ? 'Centro'
+                              : sp.kind === 'roll_again'
+                                ? 'Repite'
+                                : sp.category
+                                  ? CATEGORIES[sp.category].colorName
+                                  : sp.label}
+                        </span>
+                      </button>
+                    );
+                  })}
                 </div>
               )}
 
@@ -865,7 +991,7 @@ export default function App() {
                 <button
                   type="button"
                   onClick={() => setHighlightFilter('none')}
-                  className="px-3 py-1.5 rounded-lg bg-sky-500/15 border border-sky-400/40 text-xs font-medium text-sky-200 hover:bg-sky-500/25 transition-colors whitespace-nowrap"
+                  className="px-3 py-1.5 rounded-lg bg-celeste-500/15 border border-celeste-400/40 text-xs font-medium text-celeste-200 hover:bg-celeste-500/25 transition-colors whitespace-nowrap"
                 >
                   Quitar resaltado
                 </button>
@@ -875,7 +1001,7 @@ export default function App() {
             {/* Camera Presets + Sound Toggle */}
             <div className="flex items-center gap-2.5">
               <div
-                className="flex items-center p-1 rounded-lg bg-[#0d1018] border border-white/8"
+                className="flex items-center p-1 rounded-lg bg-sunken border border-white/8"
                 role="group"
                 aria-label="Vistas de cámara"
               >
@@ -894,7 +1020,7 @@ export default function App() {
                     className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors whitespace-nowrap ${
                       cameraPreset === presetId
                         ? 'bg-white/14 text-white'
-                        : 'text-slate-400 hover:text-slate-200'
+                        : 'text-ink-400 hover:text-ink-200'
                     }`}
                   >
                     {label}
@@ -905,14 +1031,14 @@ export default function App() {
               <button
                 type="button"
                 onClick={toggleSound}
-                className="p-2 rounded-lg bg-[#1a202e] border border-white/10 text-slate-300 hover:text-white transition-colors"
+                className="p-2 rounded-lg bg-raised border border-white/10 text-ink-300 hover:text-white transition-colors"
                 aria-label={soundEnabled ? 'Silenciar efectos' : 'Activar efectos'}
                 title={soundEnabled ? 'Sonido activado' : 'Sonido silenciado'}
               >
                 {soundEnabled ? (
-                  <Volume2 className="w-4 h-4 text-amber-400" />
+                  <Volume2 className="w-4 h-4 text-gold-400" />
                 ) : (
-                  <VolumeX className="w-4 h-4 text-slate-500" />
+                  <VolumeX className="w-4 h-4 text-ink-500" />
                 )}
               </button>
             </div>
@@ -925,9 +1051,9 @@ export default function App() {
         <button
           type="button"
           onClick={() => setDockCollapsed(false)}
-          className="fixed bottom-4 left-1/2 -translate-x-1/2 z-10 flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-[#131722]/94 border border-white/12 text-xs font-medium text-slate-200 hover:text-white shadow-lg whitespace-nowrap"
+          className="fixed bottom-4 left-1/2 -translate-x-1/2 z-10 flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-panel/94 border border-white/12 text-xs font-medium text-ink-200 hover:text-white shadow-lg whitespace-nowrap"
         >
-          <ChevronUp className="w-3.5 h-3.5 text-amber-400" />
+          <ChevronUp className="w-3.5 h-3.5 text-gold-400" />
           <span>Mostrar controles (H)</span>
         </button>
       )}
@@ -984,21 +1110,21 @@ export default function App() {
           role="dialog"
           aria-modal="true"
         >
-          <div className="w-full max-w-md bg-[#131722] border border-amber-400/40 rounded-xl shadow-2xl p-6 text-center">
-            <div className="w-14 h-14 mx-auto mb-4 rounded-xl bg-amber-400/15 border border-amber-400/40 flex items-center justify-center text-amber-300">
+          <div className="w-full max-w-md bg-panel border border-gold-400/40 rounded-xl shadow-2xl p-6 text-center">
+            <div className="w-14 h-14 mx-auto mb-4 rounded-xl bg-gold-400/15 border border-gold-400/40 flex items-center justify-center text-gold-300">
               <Trophy className="w-7 h-7" />
             </div>
             <h2 className="text-2xl font-bold text-white mb-1">
               ¡{winnerPlayer.name} gana la partida!
             </h2>
-            <p className="text-sm text-slate-300 mb-6">
+            <p className="text-sm text-ink-300 mb-6">
               Completó los seis quesitos de colores y superó el desafío final en la Casilla Central.
             </p>
             <div className="flex items-center justify-center gap-3">
               <button
                 type="button"
                 onClick={() => setSetupOpen(true)}
-                className="px-4 py-2 rounded-lg bg-amber-400 hover:bg-amber-300 text-slate-950 text-sm font-semibold transition-colors"
+                className="px-4 py-2 rounded-lg bg-gold-400 hover:bg-gold-300 text-ink-950 text-sm font-semibold transition-colors"
               >
                 Jugar otra partida
               </button>

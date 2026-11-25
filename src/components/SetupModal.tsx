@@ -9,21 +9,21 @@ import {
 import type { DifficultyLevel, MatchLength, PlayerConfig } from '../game/types';
 
 const TOKEN_FINISHES = [
-  { label: 'Marfil', hex: '#f1ece1' },
-  { label: 'Oro', hex: '#d4af37' },
-  { label: 'Cobalto', hex: '#3b82f6' },
-  { label: 'Carmesí', hex: '#e11d48' },
-  { label: 'Esmeralda', hex: '#10b981' },
-  { label: 'Grafito', hex: '#64748b' },
+  { label: 'Marfil', hex: '#fbf6ea' },
+  { label: 'Oro MarCha', hex: '#d5a53c' },
+  { label: 'Celeste Champagnat', hex: '#98c7eb' },
+  { label: 'Magenta MarCha', hex: '#c6007e' },
+  { label: 'Verde Champagnat', hex: '#62a329' },
+  { label: 'Lila MarCha', hex: '#87689b' },
 ];
 
 const BASE_DEFAULTS: PlayerConfig[] = [
-  { id: 'p1', name: 'Jugador 1', rimHex: '#f1ece1', isCpu: false },
-  { id: 'p2', name: 'Jugador 2', rimHex: '#d4af37', isCpu: true },
-  { id: 'p3', name: 'Jugador 3', rimHex: '#3b82f6', isCpu: true },
-  { id: 'p4', name: 'Jugador 4', rimHex: '#e11d48', isCpu: true },
-  { id: 'p5', name: 'Jugador 5', rimHex: '#10b981', isCpu: true },
-  { id: 'p6', name: 'Jugador 6', rimHex: '#64748b', isCpu: true },
+  { id: 'p1', name: 'Jugador 1', rimHex: '#fbf6ea', isCpu: false },
+  { id: 'p2', name: 'Jugador 2', rimHex: '#d5a53c', isCpu: true },
+  { id: 'p3', name: 'Jugador 3', rimHex: '#98c7eb', isCpu: true },
+  { id: 'p4', name: 'Jugador 4', rimHex: '#c6007e', isCpu: true },
+  { id: 'p5', name: 'Jugador 5', rimHex: '#62a329', isCpu: true },
+  { id: 'p6', name: 'Jugador 6', rimHex: '#87689b', isCpu: true },
 ];
 
 interface SetupModalProps {
@@ -91,10 +91,10 @@ export const SetupModal: React.FC<SetupModalProps> = ({
       aria-modal="true"
       aria-labelledby="setup-modal-title"
     >
-      <div className="w-full max-w-xl max-h-[88vh] flex flex-col bg-[#131722] border border-white/12 rounded-xl shadow-2xl overflow-hidden">
+      <div className="w-full max-w-xl max-h-[88vh] flex flex-col bg-panel border border-white/12 rounded-xl shadow-2xl overflow-hidden">
         <div className="flex items-center justify-between px-6 py-4 border-b border-white/10">
           <div className="flex items-center gap-2.5">
-            <Users className="w-5 h-5 text-amber-400" />
+            <Users className="w-5 h-5 text-gold-400" />
             <h2 id="setup-modal-title" className="text-lg font-semibold text-white">
               Configurar nueva partida
             </h2>
@@ -102,7 +102,7 @@ export const SetupModal: React.FC<SetupModalProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/8 transition-colors"
+            className="p-2 rounded-lg text-ink-400 hover:text-white hover:bg-white/8 transition-colors"
             aria-label="Cerrar configuración"
           >
             <X className="w-5 h-5" />
@@ -112,8 +112,8 @@ export const SetupModal: React.FC<SetupModalProps> = ({
         <div className="flex-1 overflow-y-auto custom-scroll p-6 space-y-5">
           {/* Match Length Selector */}
           <div>
-            <div className="flex items-center gap-1.5 text-xs font-medium text-slate-400 mb-2">
-              <Clock className="w-3.5 h-3.5 text-amber-400" />
+            <div className="flex items-center gap-1.5 text-xs font-medium text-ink-400 mb-2">
+              <Clock className="w-3.5 h-3.5 text-gold-400" />
               <span>Duración de la partida</span>
             </div>
             <div className="grid grid-cols-3 gap-2">
@@ -127,14 +127,14 @@ export const SetupModal: React.FC<SetupModalProps> = ({
                     onClick={() => setMatchLength(lenId)}
                     className={`py-2 px-3 rounded-lg text-sm font-medium border transition-colors whitespace-nowrap flex flex-col items-center ${
                       isSelected
-                        ? 'bg-amber-400 text-slate-950 border-amber-300 font-semibold'
-                        : 'bg-[#1a202e] text-slate-300 border-white/10 hover:border-white/25'
+                        ? 'bg-gold-400 text-ink-950 border-gold-300 font-semibold'
+                        : 'bg-raised text-ink-300 border-white/10 hover:border-white/25'
                     }`}
                   >
                     <span>{cfg.label}</span>
                     <span
                       className={`text-[11px] font-normal ${
-                        isSelected ? 'text-slate-900/80' : 'text-slate-400'
+                        isSelected ? 'text-ink-900/80' : 'text-ink-400'
                       }`}
                     >
                       {cfg.questionsPerWedge}{' '}
@@ -144,15 +144,15 @@ export const SetupModal: React.FC<SetupModalProps> = ({
                 );
               })}
             </div>
-            <p className="mt-2 text-xs text-slate-400">
+            <p className="mt-2 text-xs text-ink-400">
               {selectedLengthCfg.summary}.
             </p>
           </div>
 
           {/* Difficulty Selector */}
           <div>
-            <div className="flex items-center gap-1.5 text-xs font-medium text-slate-400 mb-2">
-              <Gauge className="w-3.5 h-3.5 text-amber-400" />
+            <div className="flex items-center gap-1.5 text-xs font-medium text-ink-400 mb-2">
+              <Gauge className="w-3.5 h-3.5 text-gold-400" />
               <span>Nivel de dificultad</span>
             </div>
             <div className="grid grid-cols-3 gap-2">
@@ -166,8 +166,8 @@ export const SetupModal: React.FC<SetupModalProps> = ({
                     onClick={() => setDifficulty(diffId)}
                     className={`py-2.5 px-3 rounded-lg text-sm font-medium border transition-colors whitespace-nowrap ${
                       isSelected
-                        ? 'bg-amber-400 text-slate-950 border-amber-300 font-semibold'
-                        : 'bg-[#1a202e] text-slate-300 border-white/10 hover:border-white/25'
+                        ? 'bg-gold-400 text-ink-950 border-gold-300 font-semibold'
+                        : 'bg-raised text-ink-300 border-white/10 hover:border-white/25'
                     }`}
                   >
                     {cfg.label}
@@ -175,14 +175,14 @@ export const SetupModal: React.FC<SetupModalProps> = ({
                 );
               })}
             </div>
-            <p className="mt-2 text-xs text-slate-400">
+            <p className="mt-2 text-xs text-ink-400">
               {selectedDiffCfg.summary}.
             </p>
           </div>
 
           {/* Player Count */}
           <div>
-            <div className="text-xs font-medium text-slate-400 mb-2">
+            <div className="text-xs font-medium text-ink-400 mb-2">
               Número de jugadores (hasta 6 fichas)
             </div>
             <div className="grid grid-cols-6 gap-2">
@@ -193,8 +193,8 @@ export const SetupModal: React.FC<SetupModalProps> = ({
                   onClick={() => setCount(n)}
                   className={`py-2 rounded-lg text-sm font-medium border transition-colors whitespace-nowrap ${
                     count === n
-                      ? 'bg-amber-400 text-slate-950 border-amber-300 font-semibold'
-                      : 'bg-[#1a202e] text-slate-300 border-white/10 hover:border-white/25'
+                      ? 'bg-gold-400 text-ink-950 border-gold-300 font-semibold'
+                      : 'bg-raised text-ink-300 border-white/10 hover:border-white/25'
                   }`}
                 >
                   {n}
@@ -208,7 +208,7 @@ export const SetupModal: React.FC<SetupModalProps> = ({
             {drafts.slice(0, count).map((player, idx) => (
               <div
                 key={player.id}
-                className="flex items-center gap-3 p-3 rounded-lg bg-[#1a202e] border border-white/8"
+                className="flex items-center gap-3 p-3 rounded-lg bg-raised border border-white/8"
               >
                 <div className="flex items-center gap-1.5 shrink-0">
                   {TOKEN_FINISHES.map((fin) => (
@@ -233,7 +233,7 @@ export const SetupModal: React.FC<SetupModalProps> = ({
                   value={player.name}
                   maxLength={18}
                   onChange={(e) => updateDraft(idx, { name: e.target.value })}
-                  className="flex-1 min-w-0 bg-[#10141e] border border-white/10 rounded-md px-3 py-1.5 text-sm text-white focus:outline-none focus:border-amber-400"
+                  className="flex-1 min-w-0 bg-sunken border border-white/10 rounded-md px-3 py-1.5 text-sm text-white focus:outline-none focus:border-gold-400"
                   placeholder={`Jugador ${idx + 1}`}
                 />
 
@@ -242,8 +242,8 @@ export const SetupModal: React.FC<SetupModalProps> = ({
                   onClick={() => updateDraft(idx, { isCpu: !player.isCpu })}
                   className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium border shrink-0 transition-colors whitespace-nowrap ${
                     player.isCpu
-                      ? 'bg-sky-500/15 text-sky-300 border-sky-400/35'
-                      : 'bg-white/8 text-slate-200 border-white/15'
+                      ? 'bg-celeste-500/15 text-celeste-300 border-celeste-400/35'
+                      : 'bg-white/8 text-ink-200 border-white/15'
                   }`}
                 >
                   {player.isCpu ? (
@@ -263,18 +263,18 @@ export const SetupModal: React.FC<SetupModalProps> = ({
           </div>
         </div>
 
-        <div className="flex items-center justify-end gap-2.5 px-6 py-3.5 border-t border-white/10 bg-[#0f131c]">
+        <div className="flex items-center justify-end gap-2.5 px-6 py-3.5 border-t border-white/10 bg-sunken">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 text-xs font-medium rounded-lg text-slate-300 hover:bg-white/8 transition-colors whitespace-nowrap"
+            className="px-4 py-2 text-xs font-medium rounded-lg text-ink-300 hover:bg-white/8 transition-colors whitespace-nowrap"
           >
             Cancelar
           </button>
           <button
             type="button"
             onClick={handleConfirm}
-            className="px-4 py-2 text-xs font-semibold rounded-lg bg-amber-400 text-slate-950 hover:bg-amber-300 transition-colors whitespace-nowrap"
+            className="px-4 py-2 text-xs font-semibold rounded-lg bg-gold-400 text-ink-950 hover:bg-gold-300 transition-colors whitespace-nowrap"
           >
             Comenzar partida
           </button>

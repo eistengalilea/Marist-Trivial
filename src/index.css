@@ -1,5 +1,64 @@
 @import "tailwindcss";
 
+/*
+ * Paleta Marista (ver src/theme/palette.ts):
+ *  - MarCha Compostela: oro #D5A53C, magenta #C6007E, violeta #312A4E
+ *  - Champagnat: azul marino #053A64 / #0F314B / #123652, azul #3C82B9,
+ *    celeste #98C7EB, verde #62A329
+ */
+@theme {
+  --color-night: #071b2e;
+  --color-panel: #0f314b;
+  --color-raised: #123652;
+  --color-raised-hover: #1a4466;
+  --color-sunken: #0a2438;
+
+  --color-gold-50: #fbf6ea;
+  --color-gold-100: #f6eacb;
+  --color-gold-200: #eed598;
+  --color-gold-300: #e4bf68;
+  --color-gold-400: #d5a53c;
+  --color-gold-500: #bf8f2a;
+  --color-gold-600: #9c7420;
+  --color-gold-700: #7a5a1a;
+  --color-gold-800: #5c4415;
+  --color-gold-900: #3f2f10;
+  --color-gold-950: #261c09;
+
+  --color-celeste-100: #e3f0fa;
+  --color-celeste-200: #c4e0f5;
+  --color-celeste-300: #98c7eb;
+  --color-celeste-400: #6aa8d8;
+  --color-celeste-500: #3c82b9;
+  --color-celeste-600: #2e6a9c;
+  --color-celeste-700: #1f527d;
+
+  --color-leaf-100: #e6f3d8;
+  --color-leaf-300: #a6d477;
+  --color-leaf-400: #82bf4a;
+  --color-leaf-500: #62a329;
+  --color-leaf-600: #4e8420;
+
+  --color-magenta-200: #f6b0d7;
+  --color-magenta-300: #ee7dbe;
+  --color-magenta-400: #e0399d;
+  --color-magenta-500: #c6007e;
+  --color-magenta-600: #a00066;
+
+  /* Neutros con matiz azul marino para texto sobre fondos oscuros */
+  --color-ink-50: #f4f7fb;
+  --color-ink-100: #e8eef5;
+  --color-ink-200: #d3dde9;
+  --color-ink-300: #b4c3d6;
+  --color-ink-400: #93a8c2;
+  --color-ink-500: #6b7f9a;
+  --color-ink-600: #4e617c;
+  --color-ink-700: #36485f;
+  --color-ink-800: #22324a;
+  --color-ink-900: #152438;
+  --color-ink-950: #071b2e;
+}
+
 @layer base {
   :root {
     --font-display: "Outfit", system-ui, -apple-system, sans-serif;
@@ -16,8 +75,8 @@
     padding: 0;
     overflow: hidden;
     font-family: var(--font-sans);
-    background-color: #0e1117;
-    color: #f1f5f9;
+    background-color: var(--color-night);
+    color: var(--color-ink-50);
   }
 
   h1,
@@ -45,11 +104,11 @@
   background: transparent;
 }
 .custom-scroll::-webkit-scrollbar-thumb {
-  background: rgba(148, 163, 184, 0.25);
+  background: rgba(152, 199, 235, 0.25);
   border-radius: 3px;
 }
 .custom-scroll::-webkit-scrollbar-thumb:hover {
-  background: rgba(148, 163, 184, 0.45);
+  background: rgba(152, 199, 235, 0.45);
 }
 
 /* 3D Card Flip Utilities */

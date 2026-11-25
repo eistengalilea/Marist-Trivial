@@ -28,6 +28,25 @@ export default defineConfig(() => {
         },
       },
     ],
+    build: {
+      // Three.js por sí solo ronda los 600 kB minificados.
+      chunkSizeWarningLimit: 700,
+      // Separa Three.js y React en chunks propios: el código del juego cambia
+      // a menudo, pero estas librerías no, así que el navegador las cachea.
+      rolldownOptions: {
+        output: {
+          codeSplitting: {
+            groups: [
+              { name: 'three', test: /node_modules[\\/]three/ },
+              {
+                name: 'react',
+                test: /node_modules[\\/](react|react-dom|scheduler)[\\/]/,
+              },
+            ],
+          },
+        },
+      },
+    },
     resolve: {
       alias: {
         '@': path.resolve(__dirname, '.'),

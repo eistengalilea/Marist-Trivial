@@ -834,22 +834,42 @@ export const QUESTION_BANK: TriviaQuestion[] = [
   },
 ];
 
+/** Índice por color construido una sola vez (evita filtrar todo el banco en cada tirada). */
+const QUESTIONS_BY_COLOR: Record<CategoryColorId, TriviaQuestion[]> = (() => {
+  const index = {
+    blue: [],
+    pink: [],
+    yellow: [],
+    purple: [],
+    green: [],
+    orange: [],
+  } as Record<CategoryColorId, TriviaQuestion[]>;
+  for (const q of QUESTION_BANK) index[q.color].push(q);
+  return index;
+})();
+
+const pickRandom = <T,>(items: T[]): T =>
+  items[Math.floor(Math.random() * items.length)];
+
+/**
+ * Elige una pregunta del color pedido, priorizando: (1) no usada y de la
+ * dificultad elegida, (2) no usada de cualquier dificultad, (3) cualquiera.
+ * Si el color ya se agotó por completo, se "rebaraja" ese mazo liberando sus
+ * ids del conjunto de usadas, para que no se repita siempre la misma.
+ */
 export function drawQuestionForColor(
   color: CategoryColorId,
   difficulty: DifficultyLevel,
   usedIds: Set<string>,
 ): TriviaQuestion {
-  const colorPool = QUESTION_BANK.filter((q) => q.color === color);
-  const matchingDifficulty = colorPool.filter(
-    (q) => q.difficulty === difficulty && !usedIds.has(q.id),
-  );
-  if (matchingDifficulty.length > 0) {
-    return matchingDifficulty[
-      Math.floor(Math.random() * matchingDifficulty.length)
-    ];
-  }
-  const freshAnyDifficulty = colorPool.filter((q) => !usedIds.has(q.id));
-  const candidates =
-    freshAnyDifficulty.length > 0 ? freshAnyDifficulty : colorPool;
-  return candidates[Math.floor(Math.random() * candidates.length)];
+  const colorPool = QUESTIONS_BY_COLOR[color];
+  const fresh = colorPool.filter((q) => !usedIds.has(q.id));
+  const matchingDifficulty = fresh.filter((q) => q.difficulty === difficulty);
+  if (matchingDifficulty.length > 0) return pickRandom(matchingDifficulty);
+  if (fresh.length > 0) return pickRandom(fresh);
+
+  // Mazo agotado: se rebaraja este color.
+  for (const q of colorPool) usedIds.delete(q.id);
+  const reshuffled = colorPool.filter((q) => q.difficulty === difficulty);
+  return pickRandom(reshuffled.length > 0 ? reshuffled : colorPool);
 }

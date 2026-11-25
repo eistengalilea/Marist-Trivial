@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { SCENE_COLORS } from '../theme/palette';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import {
   BOARD_DIMENSIONS,
@@ -96,6 +97,11 @@ export function buildBoardAssembly(maxAnisotropy: number): {
   tileVisuals: Map<string, TileVisual>;
   clickableMeshes: THREE.Mesh[];
   disposables: Array<{ dispose: () => void }>;
+  /** Recursos reutilizables por la bandeja del dado y el portacartas. */
+  shared: {
+    walnutMat: THREE.MeshStandardMaterial;
+    catTileTextures: Record<CategoryColorId, THREE.CanvasTexture>;
+  };
 } {
   const boardGroup = new THREE.Group();
   const tileVisuals = new Map<string, TileVisual>();
@@ -109,8 +115,8 @@ export function buildBoardAssembly(maxAnisotropy: number): {
 
   // Shared procedural textures
   const walnutTex = track(createWalnutWoodTexture(maxAnisotropy));
-  const feltBoardTex = track(createFeltTexture('#141a24', maxAnisotropy, 6));
-  const tableFeltTex = track(createFeltTexture('#10141c', maxAnisotropy, 18));
+  const feltBoardTex = track(createFeltTexture(SCENE_COLORS.deckFelt, maxAnisotropy, 6));
+  const tableFeltTex = track(createFeltTexture(SCENE_COLORS.tableFelt, maxAnisotropy, 18));
   const hubTex = track(createHubMedallionTexture(maxAnisotropy));
   const rollAgainTex = track(createRollAgainTileTexture(maxAnisotropy));
   const shadowTex = track(createContactShadowTexture());
@@ -133,7 +139,23 @@ export function buildBoardAssembly(maxAnisotropy: number): {
     orange: track(createCategoryTileTexture('orange', true, maxAnisotropy)),
   };
 
-  // Shared PBR Materials
+  // Materiales PBR compartidos. Los biseles de casilla no cambian en tiempo
+  // de ejecución, así que se usan 2 materiales en lugar de 78 instancias.
+  const hqBezelMat = track(
+    new THREE.MeshStandardMaterial({
+      color: SCENE_COLORS.gold,
+      roughness: 0.25,
+      metalness: 0.88,
+    }),
+  );
+  const tileBezelMat = track(
+    new THREE.MeshStandardMaterial({
+      color: SCENE_COLORS.tileBezel,
+      roughness: 0.65,
+      metalness: 0.22,
+    }),
+  );
+
   const walnutMat = track(
     new THREE.MeshStandardMaterial({
       map: walnutTex,
@@ -144,7 +166,7 @@ export function buildBoardAssembly(maxAnisotropy: number): {
 
   const brassMat = track(
     new THREE.MeshPhysicalMaterial({
-      color: 0xd9b56c,
+      color: SCENE_COLORS.gold,
       roughness: 0.24,
       metalness: 0.92,
       anisotropy: 0.65,
@@ -154,7 +176,7 @@ export function buildBoardAssembly(maxAnisotropy: number): {
 
   const darkSlateMat = track(
     new THREE.MeshStandardMaterial({
-      color: 0x1a202c,
+      color: SCENE_COLORS.trackBed,
       roughness: 0.72,
       metalness: 0.12,
     }),
@@ -173,7 +195,7 @@ export function buildBoardAssembly(maxAnisotropy: number): {
   const tableMat = track(
     new THREE.MeshStandardMaterial({
       map: tableFeltTex,
-      color: 0x1e2430,
+      color: 0x8ea6bf,
       roughness: 0.88,
       metalness: 0.04,
     }),
@@ -228,7 +250,9 @@ export function buildBoardAssembly(maxAnisotropy: number): {
   // Recessed dark felt square deck
   const feltDeckGeo = track(new THREE.BoxGeometry(21.15, 0.04, 21.15));
   const feltDeckMesh = new THREE.Mesh(feltDeckGeo, feltMat);
-  feltDeckMesh.position.y = 0.02;
+  // Cara superior en y=0.06: por encima del zócalo de nogal (y=0.04) para
+  // evitar z-fighting, y por debajo de las vías (y≈0.07).
+  feltDeckMesh.position.y = 0.04;
   feltDeckMesh.receiveShadow = true;
   boardGroup.add(feltDeckMesh);
 
@@ -305,8 +329,8 @@ export function buildBoardAssembly(maxAnisotropy: number): {
   const beaconDiamondGeo = track(new THREE.OctahedronGeometry(0.18, 0));
   const beaconMatShared = track(
     new THREE.MeshStandardMaterial({
-      color: 0xfef08a,
-      emissive: 0xf59e0b,
+      color: SCENE_COLORS.beacon,
+      emissive: SCENE_COLORS.beaconGlow,
       emissiveIntensity: 0.9,
       roughness: 0.2,
       metalness: 0.3,
@@ -334,7 +358,7 @@ export function buildBoardAssembly(maxAnisotropy: number): {
       );
       const hubBezelMat = track(
         new THREE.MeshStandardMaterial({
-          color: 0xd9b56c,
+          color: SCENE_COLORS.gold,
           roughness: 0.26,
           metalness: 0.88,
         }),
@@ -351,10 +375,10 @@ export function buildBoardAssembly(maxAnisotropy: number): {
       const hubFaceMat = track(
         new THREE.MeshPhysicalMaterial({
           map: hubTex,
-          roughness: 0.24,
-          metalness: 0.08,
-          clearcoat: 0.85,
-          clearcoatRoughness: 0.16,
+          roughness: 0.38,
+          metalness: 0.0,
+          clearcoat: 0.35,
+          clearcoatRoughness: 0.35,
           polygonOffset: true,
           polygonOffsetFactor: -1,
           polygonOffsetUnits: -1,
@@ -377,7 +401,7 @@ export function buildBoardAssembly(maxAnisotropy: number): {
       );
       const highlightMat = track(
         new THREE.MeshBasicMaterial({
-          color: 0xfde047,
+          color: SCENE_COLORS.validRing,
           transparent: true,
           opacity: 0,
           side: THREE.DoubleSide,
@@ -417,13 +441,7 @@ export function buildBoardAssembly(maxAnisotropy: number): {
     // Orient tile radially toward center
     tileGroup.rotation.y = -space.angle;
 
-    const bezelMat = track(
-      new THREE.MeshStandardMaterial({
-        color: isHQ ? 0xd9b56c : 0x262e3d,
-        roughness: isHQ ? 0.25 : 0.65,
-        metalness: isHQ ? 0.88 : 0.22,
-      }),
-    );
+    const bezelMat = isHQ ? hqBezelMat : tileBezelMat;
 
     const baseMesh = new THREE.Mesh(isHQ ? hqBoxGeo : standardBoxGeo, bezelMat);
     baseMesh.position.y = isHQ ? 0.11 : 0.07;
@@ -442,10 +460,11 @@ export function buildBoardAssembly(maxAnisotropy: number): {
     const faceMat = track(
       new THREE.MeshPhysicalMaterial({
         map: faceTex,
-        roughness: 0.22,
-        metalness: 0.05,
-        clearcoat: 0.8,
-        clearcoatRoughness: 0.18,
+        // Menos barniz: desde la vista cenital el reflejo lavaba los colores
+        roughness: 0.38,
+        metalness: 0.0,
+        clearcoat: 0.35,
+        clearcoatRoughness: 0.35,
         polygonOffset: true,
         polygonOffsetFactor: -1,
         polygonOffsetUnits: -1,
@@ -464,7 +483,7 @@ export function buildBoardAssembly(maxAnisotropy: number): {
 
     const highlightMat = track(
       new THREE.MeshBasicMaterial({
-        color: 0xfde047,
+        color: SCENE_COLORS.validRing,
         transparent: true,
         opacity: 0,
         side: THREE.DoubleSide,
@@ -502,7 +521,13 @@ export function buildBoardAssembly(maxAnisotropy: number): {
     });
   }
 
-  return { boardGroup, tileVisuals, clickableMeshes, disposables };
+  return {
+    boardGroup,
+    tileVisuals,
+    clickableMeshes,
+    disposables,
+    shared: { walnutMat, catTileTextures },
+  };
 }
 
 /**
@@ -572,7 +597,7 @@ export function createPlayerToken(
   const trayGeo = track(new THREE.CylinderGeometry(0.365, 0.365, 0.03, 32));
   const trayMat = track(
     new THREE.MeshStandardMaterial({
-      color: 0x111827,
+      color: SCENE_COLORS.tokenTray,
       roughness: 0.85,
       metalness: 0.1,
     }),
@@ -584,7 +609,7 @@ export function createPlayerToken(
   // 4. Brass radial divider fins + central grip knob
   const brassMat = track(
     new THREE.MeshStandardMaterial({
-      color: 0xe5c17b,
+      color: SCENE_COLORS.goldBright,
       roughness: 0.26,
       metalness: 0.9,
     }),
@@ -700,7 +725,7 @@ export function createDieMesh(): {
   const bodyGeo = track(new RoundedBoxGeometry(size, size, size, 4, 0.11));
   const bodyMat = track(
     new THREE.MeshPhysicalMaterial({
-      color: 0xfaf7ef,
+      color: SCENE_COLORS.dieBody,
       roughness: 0.18,
       metalness: 0.04,
       clearcoat: 0.92,
@@ -715,14 +740,14 @@ export function createDieMesh(): {
   const pipGeo = track(new THREE.SphereGeometry(0.068, 16, 12));
   const darkPipMat = track(
     new THREE.MeshStandardMaterial({
-      color: 0x1e293b,
+      color: SCENE_COLORS.diePip,
       roughness: 0.35,
       metalness: 0.2,
     }),
   );
   const crimsonPipMat = track(
     new THREE.MeshStandardMaterial({
-      color: 0xdc2626,
+      color: SCENE_COLORS.dieOnePip,
       roughness: 0.3,
       metalness: 0.15,
     }),
@@ -811,7 +836,10 @@ export function getDieTargetEuler(value: number): THREE.Euler {
  * Creates a tabletop walnut & brass card caddy beside the board holding the 6
  * unnamed color category card decks.
  */
-export function createCardCaddy(maxAnisotropy: number): {
+export function createCardCaddy(shared: {
+  walnutMat: THREE.MeshStandardMaterial;
+  catTileTextures: Record<CategoryColorId, THREE.CanvasTexture>;
+}): {
   visual: CardCaddyVisual;
   disposables: Array<{ dispose: () => void }>;
 } {
@@ -822,17 +850,11 @@ export function createCardCaddy(maxAnisotropy: number): {
   };
 
   const group = new THREE.Group();
-  const walnutTex = track(createWalnutWoodTexture(maxAnisotropy));
-  const walnutMat = track(
-    new THREE.MeshStandardMaterial({
-      map: walnutTex,
-      roughness: 0.5,
-      metalness: 0.05,
-    }),
-  );
+  // Madera y texturas de cartas se reutilizan del tablero (sin duplicar canvas)
+  const walnutMat = shared.walnutMat;
   const brassMat = track(
     new THREE.MeshStandardMaterial({
-      color: 0xd9b56c,
+      color: SCENE_COLORS.gold,
       roughness: 0.26,
       metalness: 0.88,
     }),
@@ -881,7 +903,7 @@ export function createCardCaddy(maxAnisotropy: number): {
     stack.receiveShadow = true;
     group.add(stack);
 
-    const cardTex = track(createCategoryTileTexture(catId, false, maxAnisotropy));
+    const cardTex = shared.catTileTextures[catId];
     const cardMat = track(
       new THREE.MeshPhysicalMaterial({
         map: cardTex,

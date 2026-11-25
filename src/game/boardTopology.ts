@@ -63,58 +63,64 @@ export const CATEGORY_ORDER: CategoryColorId[] = [
   'orange',
 ];
 
+/**
+ * Colores de categoría derivados de la paleta Marista (ver src/theme/palette.ts):
+ * Azul Champagnat, Magenta MarCha, Oro/Amarillo, Morado MarCha, Verde
+ * Champagnat y Naranja MarCha. Se ajustaron luz/sombra para que los seis tonos
+ * se distingan bien entre sí sobre el fondo azul marino.
+ */
 export const CATEGORIES: Record<CategoryColorId, CategoryConfig> = {
   blue: {
     id: 'blue',
     colorName: 'Azul',
-    hex: '#2563EB',
-    lightHex: '#60A5FA',
-    darkHex: '#1D4ED8',
+    hex: '#3C82B9',
+    lightHex: '#98C7EB',
+    darkHex: '#053A64',
     emblem: 'compass',
     unassignedLabel: 'Categoría cromática sin nombrar',
   },
   pink: {
     id: 'pink',
     colorName: 'Rosa',
-    hex: '#DB2777',
-    lightHex: '#F472B6',
-    darkHex: '#9D174D',
+    hex: '#C6007E',
+    lightHex: '#E85AAE',
+    darkHex: '#7A004E',
     emblem: 'diamond',
     unassignedLabel: 'Categoría cromática sin nombrar',
   },
   yellow: {
     id: 'yellow',
     colorName: 'Amarillo',
-    hex: '#EAB308',
-    lightHex: '#FDE047',
-    darkHex: '#A16207',
+    hex: '#F2C230',
+    lightHex: '#FBE38A',
+    darkHex: '#A87A12',
     emblem: 'star',
     unassignedLabel: 'Categoría cromática sin nombrar',
   },
   purple: {
     id: 'purple',
     colorName: 'Morado',
-    hex: '#7C3AED',
-    lightHex: '#A78BFA',
-    darkHex: '#5B21B6',
+    hex: '#6F2DA8',
+    lightHex: '#A58BC2',
+    darkHex: '#3D0066',
     emblem: 'hex',
     unassignedLabel: 'Categoría cromática sin nombrar',
   },
   green: {
     id: 'green',
     colorName: 'Verde',
-    hex: '#10B981',
-    lightHex: '#34D399',
-    darkHex: '#047857',
+    hex: '#62A329',
+    lightHex: '#9CCB5E',
+    darkHex: '#3F6B1A',
     emblem: 'leaf',
     unassignedLabel: 'Categoría cromática sin nombrar',
   },
   orange: {
     id: 'orange',
     colorName: 'Naranja',
-    hex: '#EA580C',
-    lightHex: '#FB923C',
-    darkHex: '#9A3412',
+    hex: '#D37D00',
+    lightHex: '#F0A040',
+    darkHex: '#8A4A00',
     emblem: 'flame',
     unassignedLabel: 'Categoría cromática sin nombrar',
   },
@@ -380,28 +386,55 @@ export function findValidMoves(
   return results;
 }
 
+/**
+ * Tabla de distancias precalculada (BFS desde cada casilla) para el tablero
+ * por defecto. El tablero tiene 79 casillas, así que la tabla completa ocupa
+ * ~6.000 entradas y convierte cada consulta de la IA en O(1) en lugar de un
+ * BFS completo por cada destino candidato.
+ */
+const distanceCache = new WeakMap<
+  Map<string, BoardSpace>,
+  Map<string, Map<string, number>>
+>();
+
+function bfsDistances(
+  fromId: string,
+  spaceMap: Map<string, BoardSpace>,
+): Map<string, number> {
+  const dist = new Map<string, number>([[fromId, 0]]);
+  const queue: string[] = [fromId];
+  for (let head = 0; head < queue.length; head++) {
+    const curr = queue[head];
+    const d = dist.get(curr)!;
+    const space = spaceMap.get(curr);
+    if (!space) continue;
+    for (const n of space.neighbors) {
+      if (!dist.has(n)) {
+        dist.set(n, d + 1);
+        queue.push(n);
+      }
+    }
+  }
+  return dist;
+}
+
 export function shortestGraphDistance(
   fromId: string,
   toId: string,
   spaceMap: Map<string, BoardSpace> = TRIVIAL_BOARD.spaceMap,
 ): number {
   if (fromId === toId) return 0;
-  const visited = new Set<string>([fromId]);
-  const queue: Array<[string, number]> = [[fromId, 0]];
-
-  while (queue.length > 0) {
-    const [curr, dist] = queue.shift()!;
-    const space = spaceMap.get(curr);
-    if (!space) continue;
-    for (const n of space.neighbors) {
-      if (n === toId) return dist + 1;
-      if (!visited.has(n)) {
-        visited.add(n);
-        queue.push([n, dist + 1]);
-      }
-    }
+  let table = distanceCache.get(spaceMap);
+  if (!table) {
+    table = new Map();
+    distanceCache.set(spaceMap, table);
   }
-  return Infinity;
+  let fromDistances = table.get(fromId);
+  if (!fromDistances) {
+    fromDistances = bfsDistances(fromId, spaceMap);
+    table.set(fromId, fromDistances);
+  }
+  return fromDistances.get(toId) ?? Infinity;
 }
 
 export function countPlayerWedges(wedges: Record<CategoryColorId, boolean>): number {

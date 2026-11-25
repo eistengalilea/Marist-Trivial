@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { CANVAS_COLORS } from '../theme/palette';
 import {
   CATEGORIES,
   CATEGORY_ORDER,
@@ -158,9 +159,16 @@ export function createFeltTexture(
   ctx.fillRect(0, 0, size, size);
 
   // Subtle micro-weave noise
+  // Ruido pseudoaleatorio determinista (LCG). El patrón lineal anterior
+  // (i*73, i*137) generaba rayas diagonales visibles en el fieltro.
+  let seed = 1337;
+  const rand = () => {
+    seed = (seed * 1664525 + 1013904223) >>> 0;
+    return seed / 4294967296;
+  };
   for (let i = 0; i < 4500; i++) {
-    const x = (i * 73) % size;
-    const y = (i * 137) % size;
+    const x = Math.floor(rand() * size);
+    const y = Math.floor(rand() * size);
     ctx.fillStyle =
       i % 2 === 0 ? 'rgba(255,255,255,0.035)' : 'rgba(0,0,0,0.06)';
     ctx.fillRect(x, y, 2, 2);
@@ -204,7 +212,7 @@ export function createCategoryTileTexture(
 
   // Fine inset gold/ivory frame
   ctx.strokeStyle = isHQ
-    ? 'rgba(253, 230, 138, 0.92)'
+    ? CANVAS_COLORS.goldFrame
     : 'rgba(255, 255, 255, 0.42)';
   ctx.lineWidth = isHQ ? 16 : 10;
   ctx.strokeRect(24, 24, size - 48, size - 48);
@@ -212,11 +220,11 @@ export function createCategoryTileTexture(
   if (isHQ) {
     // Wedge medallion silhouette behind emblem to mark HQ spaces unmistakably
     ctx.save();
-    ctx.fillStyle = 'rgba(15, 23, 42, 0.28)';
+    ctx.fillStyle = 'rgba(5, 58, 100, 0.32)';
     ctx.beginPath();
     ctx.arc(size / 2, size / 2, size * 0.34, 0, Math.PI * 2);
     ctx.fill();
-    ctx.strokeStyle = 'rgba(253, 230, 138, 0.85)';
+    ctx.strokeStyle = CANVAS_COLORS.goldFrame;
     ctx.lineWidth = 6;
     ctx.stroke();
 
@@ -274,12 +282,12 @@ export function createRollAgainTileTexture(
     size / 2,
     size * 0.7,
   );
-  grad.addColorStop(0, '#fcfaf2');
-  grad.addColorStop(1, '#dfd6c2');
+  grad.addColorStop(0, CANVAS_COLORS.ivoryLight);
+  grad.addColorStop(1, CANVAS_COLORS.ivoryDark);
   ctx.fillStyle = grad;
   ctx.fillRect(0, 0, size, size);
 
-  ctx.strokeStyle = '#b08d57';
+  ctx.strokeStyle = CANVAS_COLORS.gold;
   ctx.lineWidth = 14;
   ctx.strokeRect(24, 24, size - 48, size - 48);
 
@@ -288,7 +296,7 @@ export function createRollAgainTileTexture(
   ctx.translate(size / 2, size / 2);
 
   // Curved arrows
-  ctx.strokeStyle = '#1e293b';
+  ctx.strokeStyle = CANVAS_COLORS.navy;
   ctx.lineWidth = 22;
   ctx.lineCap = 'round';
   const arcR = 134;
@@ -304,7 +312,7 @@ export function createRollAgainTileTexture(
   const drawHead = (angle: number) => {
     ctx.save();
     ctx.rotate(angle);
-    ctx.fillStyle = '#1e293b';
+    ctx.fillStyle = CANVAS_COLORS.navy;
     ctx.beginPath();
     ctx.moveTo(arcR + 22, -4);
     ctx.lineTo(arcR - 20, -4);
@@ -317,7 +325,7 @@ export function createRollAgainTileTexture(
   drawHead(Math.PI * 1.08);
 
   // Center stylized die square with 5 pips
-  ctx.fillStyle = '#0f172a';
+  ctx.fillStyle = CANVAS_COLORS.navyDark;
   const dSize = 112;
   const r = 20;
   ctx.beginPath();
@@ -357,7 +365,7 @@ export function createHubMedallionTexture(
   const cx = size / 2;
   const cy = size / 2;
 
-  ctx.fillStyle = '#181c24';
+  ctx.fillStyle = CANVAS_COLORS.navyDeep;
   ctx.fillRect(0, 0, size, size);
 
   // 6 colored sectors aligned to each square-board spoke angle
@@ -393,7 +401,7 @@ export function createHubMedallionTexture(
     ctx.fill();
 
     // Gold separator lines
-    ctx.strokeStyle = '#e5c17b';
+    ctx.strokeStyle = CANVAS_COLORS.gold;
     ctx.lineWidth = 10;
     ctx.stroke();
 
@@ -411,22 +419,22 @@ export function createHubMedallionTexture(
   // Outer brass ring
   ctx.beginPath();
   ctx.arc(cx, cy, outerR, 0, Math.PI * 2);
-  ctx.strokeStyle = '#e5c17b';
+  ctx.strokeStyle = CANVAS_COLORS.gold;
   ctx.lineWidth = 18;
   ctx.stroke();
 
   // Inner ivory compass center
   ctx.beginPath();
   ctx.arc(cx, cy, innerR, 0, Math.PI * 2);
-  ctx.fillStyle = '#f8f5ec';
+  ctx.fillStyle = CANVAS_COLORS.ivoryLight;
   ctx.fill();
-  ctx.strokeStyle = '#d4af37';
+  ctx.strokeStyle = CANVAS_COLORS.goldLight;
   ctx.lineWidth = 12;
   ctx.stroke();
 
   // Subtle geometric star in center
   drawEmblemPath(ctx, 'compass', cx, cy, innerR * 0.62);
-  ctx.fillStyle = '#1e293b';
+  ctx.fillStyle = CANVAS_COLORS.navy;
   ctx.fill();
 
   const tex = new THREE.CanvasTexture(canvas);

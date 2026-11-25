@@ -84,7 +84,7 @@ export const WedgeWheelSvg: React.FC<{
         cx={cx}
         cy={cy}
         r={45}
-        fill="#0f172a"
+        fill="#0a2438"
         stroke={rimHex}
         strokeWidth="7"
       />
@@ -94,13 +94,13 @@ export const WedgeWheelSvg: React.FC<{
           <path
             key={catId}
             d={sectorPath(idx)}
-            fill={earned ? CATEGORIES[catId].hex : '#1e293b'}
-            stroke="#0f172a"
+            fill={earned ? CATEGORIES[catId].hex : '#1a4466'}
+            stroke="#0a2438"
             strokeWidth="1.5"
           />
         );
       })}
-      <circle cx={cx} cy={cy} r={9} fill="#e5c17b" />
+      <circle cx={cx} cy={cy} r={9} fill="#d5a53c" />
     </svg>
   );
 };
