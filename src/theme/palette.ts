@@ -75,6 +75,10 @@ const SCENE_COLORS_LIGHT: typeof SCENE_COLORS_DARK = {
   hemiSky: 0xffffff,
   hemiGround: 0x8f86a3,
   tokenTray: 0xd9d3e4,
+  // En modo claro el dado es azul oscuro con los puntos blancos.
+  dieBody: 0x1a1530, // más oscuro que #312A4E porque la luz clara lo aclara
+  diePip: 0xffffff,
+  dieOnePip: 0xffffff,
 };
 
 /**
