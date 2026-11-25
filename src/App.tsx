@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   BookOpen,
+  Printer,
   ChevronDown,
   ChevronUp,
   Dices,
@@ -38,6 +39,7 @@ import type {
 import { TrivialSceneController } from './three/TrivialSceneController';
 import { WedgeWheelSvg } from './components/CategoryEmblemSvg';
 import { RulesAnalysisModal } from './components/RulesAnalysisModal';
+import { PrintablesModal } from './components/PrintablesModal';
 import { ChallengeModal } from './components/ChallengeModal';
 import { SetupModal } from './components/SetupModal';
 import { PlayerProgressModal } from './components/PlayerProgressModal';
@@ -107,6 +109,7 @@ export default function App() {
   const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
   const [dockCollapsed, setDockCollapsed] = useState<boolean>(false);
   const [rulesOpen, setRulesOpen] = useState<boolean>(false);
+  const [printablesOpen, setPrintablesOpen] = useState<boolean>(false);
   const [setupOpen, setSetupOpen] = useState<boolean>(false);
   const [contextLost, setContextLost] = useState<boolean>(false);
   const [statusText, setStatusText] = useState<StatusText>(
@@ -525,7 +528,7 @@ export default function App() {
   // CPU Autonomous Turn Choreography
   useEffect(() => {
     if (!activePlayer || !activePlayer.isCpu) return;
-    if (rulesOpen || setupOpen || inspectedPlayerId !== null) return;
+    if (rulesOpen || printablesOpen || setupOpen || inspectedPlayerId !== null) return;
 
     if (phase === 'idle') {
       const t = window.setTimeout(() => triggerRoll(), 700);
@@ -622,6 +625,7 @@ export default function App() {
     activeChallenge,
     difficulty,
     rulesOpen,
+    printablesOpen,
     setupOpen,
     inspectedPlayerId,
     triggerRoll,
@@ -689,6 +693,7 @@ export default function App() {
     activePlayer &&
     !activePlayer.isCpu &&
     !rulesOpen &&
+    !printablesOpen &&
     !setupOpen &&
     inspectedPlayerId === null;
 
@@ -726,7 +731,7 @@ export default function App() {
       setDockCollapsed((prev) => !prev);
       return;
     }
-    if (rulesOpen || setupOpen || inspectedPlayerId !== null) return;
+    if (rulesOpen || printablesOpen || setupOpen || inspectedPlayerId !== null) return;
 
     const ch = activeChallenge;
     const humanTurn = !!activePlayer && !activePlayer.isCpu;
@@ -900,6 +905,17 @@ export default function App() {
         >
           <BookOpen className="w-3.5 h-3.5 text-gold-400" />
           <span>{m.header.rules}</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            soundFX.playUiClick();
+            setPrintablesOpen(true);
+          }}
+          className="flex items-center gap-2 px-3.5 py-2 rounded-lg bg-panel/94 border border-white/12 hover:border-gold-400/50 text-xs font-medium text-ink-100 transition-colors whitespace-nowrap shadow-lg"
+        >
+          <Printer className="w-3.5 h-3.5 text-gold-400" />
+          <span>{m.header.printables}</span>
         </button>
         <button
           type="button"
@@ -1149,6 +1165,9 @@ export default function App() {
         onSelectFilter={setHighlightFilter}
         onClose={() => setRulesOpen(false)}
       />
+
+      {/* Descargas para jugar en papel */}
+      <PrintablesModal open={printablesOpen} onClose={() => setPrintablesOpen(false)} />
 
       {/* Match Setup Modal */}
       <SetupModal
