@@ -11,3 +11,7 @@ card = im.crop((int(w*0.071), int(h*0.033), int(w*0.5), int(h*0.505)))
 card.thumbnail((240, 400), Image.LANCZOS); card.save(os.path.join(dst, 'tarjetas.jpg'), quality=85)
 im = Image.open(os.path.join(src, 'fichas.png')).convert('RGB'); im.thumbnail((240, 340), Image.LANCZOS)
 im.save(os.path.join(dst, 'fichas.jpg'), quality=85)
+m = os.path.join(src, 'manual.png')
+if os.path.exists(m):
+    im = Image.open(m).convert('RGB'); im.thumbnail((240, 340), Image.LANCZOS)
+    im.save(os.path.join(dst, 'manual.jpg'), quality=85)

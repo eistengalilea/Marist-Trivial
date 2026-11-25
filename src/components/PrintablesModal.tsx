@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Download, FileText, Image as ImageIcon } from 'lucide-react';
+import { X, Download, FileText, Image as ImageIcon, BookOpen } from 'lucide-react';
 import { useI18n } from '../i18n/I18nContext';
 
 /**
@@ -116,6 +116,19 @@ export const PrintablesModal: React.FC<PrintablesModalProps> = ({ open, onClose 
                   <FileLink href={`${base}fichas-hoja-1.svg`} label={`SVG · ${p.sheet(1)}`} kind="svg" />
                   <FileLink href={`${base}fichas-hoja-2.svg`} label={`SVG · ${p.sheet(2)}`} kind="svg" />
                 </div>
+              </div>
+            </div>
+          </section>
+
+          <section className="rounded-lg border border-white/10 bg-white/4 p-3 flex gap-3">
+            <img src={`${thumbs}manual.jpg`} alt="" loading="lazy" className="w-24 h-auto self-start rounded" />
+            <div className="flex flex-col gap-2">
+              <h3 className="flex items-center gap-2 text-sm font-semibold text-gold-400 uppercase tracking-wide">
+                <BookOpen className="w-4 h-4" /> {p.manual}
+              </h3>
+              <p className="text-xs text-ink-300">{p.manualNote}</p>
+              <div className="flex flex-wrap gap-1.5">
+                <FileLink href={`${base}manual.pdf`} label="PDF" kind="pdf" />
               </div>
             </div>
           </section>
