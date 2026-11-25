@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { CANVAS_COLORS } from '../theme/palette';
+import { MARCHA_SYMBOL_PATHS, MARCHA_SYMBOL_VIEWBOX } from '../brand/marchaSymbol';
 import {
   CATEGORIES,
   CATEGORY_ORDER,
@@ -188,74 +189,62 @@ export function createCategoryTileTexture(
   isHQ: boolean,
   maxAnisotropy: number,
 ): THREE.CanvasTexture {
+  // Mismo diseño que el tablero imprimible: color plano, filete blanco y
+  // emblema blanco; las sedes llevan un medallón oscuro con el quesito.
   const cat = CATEGORIES[categoryId];
   const size = 512;
   const canvas = document.createElement('canvas');
   canvas.width = size;
   canvas.height = size;
   const ctx = canvas.getContext('2d')!;
+  const c = size / 2;
 
-  // Rich radial enamel gradient
-  const grad = ctx.createRadialGradient(
-    size * 0.5,
-    size * 0.44,
-    size * 0.08,
-    size * 0.5,
-    size * 0.5,
-    size * 0.72,
-  );
-  grad.addColorStop(0, cat.lightHex);
-  grad.addColorStop(0.55, cat.hex);
-  grad.addColorStop(1, cat.darkHex);
-  ctx.fillStyle = grad;
+  ctx.fillStyle = cat.hex;
   ctx.fillRect(0, 0, size, size);
 
-  // Fine inset gold/ivory frame
-  ctx.strokeStyle = isHQ
-    ? CANVAS_COLORS.goldFrame
-    : 'rgba(255, 255, 255, 0.42)';
-  ctx.lineWidth = isHQ ? 16 : 10;
-  ctx.strokeRect(24, 24, size - 48, size - 48);
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+  ctx.lineWidth = 8;
+  ctx.beginPath();
+  ctx.roundRect(30, 30, size - 60, size - 60, 26);
+  ctx.stroke();
 
   if (isHQ) {
-    // Wedge medallion silhouette behind emblem to mark HQ spaces unmistakably
-    ctx.save();
-    ctx.fillStyle = 'rgba(5, 58, 100, 0.32)';
+    const r = size * 0.37;
     ctx.beginPath();
-    ctx.arc(size / 2, size / 2, size * 0.34, 0, Math.PI * 2);
+    ctx.arc(c, c, r, 0, Math.PI * 2);
+    ctx.fillStyle = cat.darkHex;
     ctx.fill();
-    ctx.strokeStyle = CANVAS_COLORS.goldFrame;
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 8;
+    ctx.stroke();
+    // Quesito
+    const wy = c + r * 0.37;
+    const wr = r * 0.96;
+    ctx.beginPath();
+    ctx.moveTo(c, wy);
+    ctx.arc(c, wy, wr, -Math.PI / 2 - Math.PI / 6, -Math.PI / 2 + Math.PI / 6);
+    ctx.closePath();
+    ctx.fillStyle = cat.lightHex;
+    ctx.fill();
     ctx.lineWidth = 6;
     ctx.stroke();
-
-    // Inner wedge triangle motif
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.16)';
-    ctx.beginPath();
-    ctx.moveTo(size / 2, size / 2 - size * 0.28);
-    ctx.lineTo(size / 2 + size * 0.25, size / 2 + size * 0.19);
-    ctx.lineTo(size / 2 - size * 0.25, size / 2 + size * 0.19);
-    ctx.closePath();
+    drawEmblemPath(ctx, cat.emblem, c, c - r * 0.1, r * 0.3);
+    ctx.fillStyle = '#ffffff';
+    ctx.fill('evenodd');
+    if (cat.emblem === 'hex') {
+      drawEmblemPath(ctx, 'hex', c, c - r * 0.1, r * 0.14);
+      ctx.fillStyle = cat.lightHex;
+      ctx.fill();
+    }
+  } else {
+    drawEmblemPath(ctx, cat.emblem, c, c, 105);
+    ctx.fillStyle = '#ffffff';
     ctx.fill();
-    ctx.restore();
-  }
-
-  // Geometric emblem in crisp ivory
-  ctx.save();
-  ctx.shadowColor = 'rgba(0, 0, 0, 0.32)';
-  ctx.shadowBlur = 10;
-  ctx.shadowOffsetY = 4;
-  drawEmblemPath(ctx, cat.emblem, size / 2, size / 2, isHQ ? 92 : 105);
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.94)';
-  ctx.fill();
-  ctx.restore();
-
-  if (cat.emblem === 'hex') {
-    // Hollow inner hex ring for sharper read
-    ctx.save();
-    drawEmblemPath(ctx, 'hex', size / 2, size / 2, isHQ ? 42 : 48);
-    ctx.fillStyle = cat.hex;
-    ctx.fill();
-    ctx.restore();
+    if (cat.emblem === 'hex') {
+      drawEmblemPath(ctx, 'hex', c, c, 50);
+      ctx.fillStyle = cat.hex;
+      ctx.fill();
+    }
   }
 
   const tex = new THREE.CanvasTexture(canvas);
@@ -267,86 +256,41 @@ export function createCategoryTileTexture(
 export function createRollAgainTileTexture(
   maxAnisotropy: number,
 ): THREE.CanvasTexture {
+  // Igual que en el tablero imprimible: marfil con filete dorado y dos dados
   const size = 512;
   const canvas = document.createElement('canvas');
   canvas.width = size;
   canvas.height = size;
   const ctx = canvas.getContext('2d')!;
 
-  // Warm ivory enamel background
-  const grad = ctx.createRadialGradient(
-    size / 2,
-    size * 0.45,
-    30,
-    size / 2,
-    size / 2,
-    size * 0.7,
-  );
-  grad.addColorStop(0, CANVAS_COLORS.ivoryLight);
-  grad.addColorStop(1, CANVAS_COLORS.ivoryDark);
-  ctx.fillStyle = grad;
+  ctx.fillStyle = CANVAS_COLORS.ivoryLight;
   ctx.fillRect(0, 0, size, size);
-
   ctx.strokeStyle = CANVAS_COLORS.gold;
-  ctx.lineWidth = 14;
-  ctx.strokeRect(24, 24, size - 48, size - 48);
+  ctx.lineWidth = 20;
+  ctx.strokeRect(10, 10, size - 20, size - 20);
 
-  // Circular re-roll arrows around a crisp die icon
-  ctx.save();
-  ctx.translate(size / 2, size / 2);
-
-  // Curved arrows
-  ctx.strokeStyle = CANVAS_COLORS.navy;
-  ctx.lineWidth = 22;
-  ctx.lineCap = 'round';
-  const arcR = 134;
-  ctx.beginPath();
-  ctx.arc(0, 0, arcR, -Math.PI * 0.82, Math.PI * 0.08);
-  ctx.stroke();
-
-  ctx.beginPath();
-  ctx.arc(0, 0, arcR, Math.PI * 0.18, Math.PI * 1.08);
-  ctx.stroke();
-
-  // Arrowheads
-  const drawHead = (angle: number) => {
+  const die = (cx: number, cy: number, rot: number, pips: [number, number][], first?: boolean) => {
     ctx.save();
-    ctx.rotate(angle);
-    ctx.fillStyle = CANVAS_COLORS.navy;
+    ctx.translate(cx, cy);
+    ctx.rotate(rot);
+    const d = 190;
     ctx.beginPath();
-    ctx.moveTo(arcR + 22, -4);
-    ctx.lineTo(arcR - 20, -4);
-    ctx.lineTo(arcR, 28);
-    ctx.closePath();
+    ctx.roundRect(-d / 2, -d / 2, d, d, 34);
+    ctx.fillStyle = CANVAS_COLORS.navy;
     ctx.fill();
+    ctx.lineWidth = 14;
+    ctx.strokeStyle = CANVAS_COLORS.ivoryLight;
+    ctx.stroke();
+    pips.forEach(([px, py]) => {
+      ctx.beginPath();
+      ctx.arc(px * 52, py * 52, 18, 0, Math.PI * 2);
+      ctx.fillStyle = first ? '#d37d00' : CANVAS_COLORS.ivoryLight;
+      ctx.fill();
+    });
     ctx.restore();
   };
-  drawHead(Math.PI * 0.08);
-  drawHead(Math.PI * 1.08);
-
-  // Center stylized die square with 5 pips
-  ctx.fillStyle = CANVAS_COLORS.navyDark;
-  const dSize = 112;
-  const r = 20;
-  ctx.beginPath();
-  ctx.roundRect(-dSize / 2, -dSize / 2, dSize, dSize, r);
-  ctx.fill();
-
-  ctx.fillStyle = '#f8fafc';
-  const pipOffsets = [
-    [-28, -28],
-    [28, -28],
-    [0, 0],
-    [-28, 28],
-    [28, 28],
-  ];
-  pipOffsets.forEach(([px, py]) => {
-    ctx.beginPath();
-    ctx.arc(px, py, 10, 0, Math.PI * 2);
-    ctx.fill();
-  });
-
-  ctx.restore();
+  die(size * 0.4, size * 0.38, -0.21, [[0, 0]], true);
+  die(size * 0.6, size * 0.62, 0.24, [[-1, -1], [0, 0], [1, 1]]);
 
   const tex = new THREE.CanvasTexture(canvas);
   tex.colorSpace = THREE.SRGBColorSpace;
@@ -423,19 +367,25 @@ export function createHubMedallionTexture(
   ctx.lineWidth = 18;
   ctx.stroke();
 
-  // Inner ivory compass center
+  // Centro azul oscuro con el símbolo MarCha en blanco, como en el imprimible
   ctx.beginPath();
   ctx.arc(cx, cy, innerR, 0, Math.PI * 2);
-  ctx.fillStyle = CANVAS_COLORS.ivoryLight;
+  ctx.fillStyle = CANVAS_COLORS.navy;
   ctx.fill();
-  ctx.strokeStyle = CANVAS_COLORS.goldLight;
+  ctx.strokeStyle = CANVAS_COLORS.gold;
   ctx.lineWidth = 12;
   ctx.stroke();
 
-  // Subtle geometric star in center
-  drawEmblemPath(ctx, 'compass', cx, cy, innerR * 0.62);
-  ctx.fillStyle = CANVAS_COLORS.navy;
-  ctx.fill();
+  const [vx, vy, vw, vh] = MARCHA_SYMBOL_VIEWBOX.split(' ').map(Number);
+  const symH = innerR * 1.25;
+  const k = symH / vh;
+  ctx.save();
+  ctx.translate(cx - (vw * k) / 2, cy - symH / 2);
+  ctx.scale(k, k);
+  ctx.translate(-vx, -vy);
+  ctx.fillStyle = '#ffffff';
+  MARCHA_SYMBOL_PATHS.forEach((d) => ctx.fill(new Path2D(d), 'evenodd'));
+  ctx.restore();
 
   const tex = new THREE.CanvasTexture(canvas);
   tex.colorSpace = THREE.SRGBColorSpace;

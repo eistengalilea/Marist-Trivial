@@ -6,6 +6,8 @@ import {
   ChevronUp,
   Dices,
   Languages,
+  Moon,
+  Sun,
   RotateCcw,
   Trophy,
   Volume2,
@@ -17,6 +19,8 @@ import {
   DIFFICULTY_CONFIGS,
   MATCH_LENGTH_CONFIGS,
   TRIVIAL_BOARD,
+  setBoardLayout,
+  type BoardLayout,
   countPlayerWedges,
   createEmptyCategoryProgress,
   createEmptyWedges,
@@ -37,6 +41,7 @@ import type {
   PlayerState,
 } from './game/types';
 import { TrivialSceneController } from './three/TrivialSceneController';
+import { applySceneTheme, type GameTheme } from './theme/palette';
 import { WedgeWheelSvg } from './components/CategoryEmblemSvg';
 import { RulesAnalysisModal } from './components/RulesAnalysisModal';
 import { PrintablesModal } from './components/PrintablesModal';
@@ -110,6 +115,37 @@ export default function App() {
   const [dockCollapsed, setDockCollapsed] = useState<boolean>(false);
   const [rulesOpen, setRulesOpen] = useState<boolean>(false);
   const [printablesOpen, setPrintablesOpen] = useState<boolean>(false);
+  const [boardLayout, setBoardLayoutState] = useState<BoardLayout>(() => {
+    try {
+      return localStorage.getItem('marist-trivial-board') === 'circle' ? 'circle' : 'square';
+    } catch {
+      return 'square';
+    }
+  });
+  const [theme, setTheme] = useState<GameTheme>(() => {
+    try {
+      return localStorage.getItem('marist-trivial-theme') === 'light' ? 'light' : 'dark';
+    } catch {
+      return 'dark';
+    }
+  });
+
+  // Modo claro u oscuro: interfaz (variables CSS) y escena 3D
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    try {
+      localStorage.setItem('marist-trivial-theme', theme);
+    } catch {
+      /* sin almacenamiento: no pasa nada */
+    }
+  }, [theme]);
+  useEffect(() => {
+    try {
+      localStorage.setItem('marist-trivial-board', boardLayout);
+    } catch {
+      /* sin almacenamiento */
+    }
+  }, [boardLayout]);
   const [setupOpen, setSetupOpen] = useState<boolean>(false);
   const [contextLost, setContextLost] = useState<boolean>(false);
   const [statusText, setStatusText] = useState<StatusText>(
@@ -308,6 +344,10 @@ export default function App() {
     const mountEl = canvasMountRef.current;
     if (!mountEl) return;
 
+    // La forma del tablero y el modo de color se aplican antes de construir la escena
+    setBoardLayout(boardLayout);
+    applySceneTheme(theme);
+
     const controller = new TrivialSceneController(mountEl, {
       onSpaceClick: (spaceId) => {
         const {
@@ -345,12 +385,16 @@ export default function App() {
     });
 
     sceneRef.current = controller;
+    // Al reconstruir la escena (cambio de tablero o de modo), recoloca las fichas
+    const cur = stateRef.current;
+    const curActive = cur.players[cur.activePlayerIdx] ?? cur.players[0];
+    if (curActive) controller.syncPlayers(cur.players, curActive.id);
 
     return () => {
       controller.dispose();
       sceneRef.current = null;
     };
-  }, [chooseMovePath, handleDieSettled, handleSpaceArrival]);
+  }, [chooseMovePath, handleDieSettled, handleSpaceArrival, boardLayout, theme]);
 
   // Sync players, wedges, and active challenge card to 3D scene
   useEffect(() => {
@@ -639,8 +683,14 @@ export default function App() {
     configs: PlayerConfig[],
     nextDifficulty: DifficultyLevel,
     nextMatchLength: MatchLength,
+    nextLayout: BoardLayout,
+    nextTheme: GameTheme,
   ) => {
     soundFX.playUiClick();
+    // El tablero nuevo debe existir antes de colocar las fichas en la salida
+    setBoardLayout(nextLayout);
+    setBoardLayoutState(nextLayout);
+    setTheme(nextTheme);
     questionDecksRef.current = createQuestionDecks();
     const fresh = buildInitialPlayers(configs);
     setDifficulty(nextDifficulty);
@@ -817,7 +867,7 @@ export default function App() {
         <div className="pointer-events-auto inline-flex flex-col gap-2.5 bg-panel/94 border border-white/10 rounded-xl px-4 py-3 shadow-lg">
           <div className="flex items-baseline gap-3 flex-wrap">
             <h1 className="flex items-center gap-2 text-lg font-bold tracking-tight text-white whitespace-nowrap">
-              <MarchaSymbol fill="#ffffff" className="w-6 h-6" />
+              <MarchaSymbol fill="currentColor" className="w-6 h-6" />
               Marist Trivial
             </h1>
             <span className="text-xs text-ink-400 whitespace-nowrap">
@@ -895,6 +945,22 @@ export default function App() {
             </button>
           ))}
         </div>
+        <button
+          type="button"
+          onClick={() => {
+            soundFX.playUiClick();
+            setTheme((t) => (t === 'dark' ? 'light' : 'dark'));
+          }}
+          aria-label={theme === 'dark' ? m.setup.light : m.setup.dark}
+          title={`${m.setup.theme}: ${theme === 'dark' ? m.setup.dark : m.setup.light}`}
+          className="flex items-center justify-center w-9 h-9 rounded-lg bg-panel/94 border border-white/12 hover:border-gold-400/50 text-ink-100 transition-colors shadow-lg"
+        >
+          {theme === 'dark' ? (
+            <Sun className="w-4 h-4 text-gold-400" />
+          ) : (
+            <Moon className="w-4 h-4 text-gold-400" />
+          )}
+        </button>
         <button
           type="button"
           onClick={() => {
@@ -1175,6 +1241,8 @@ export default function App() {
         initialPlayers={players}
         initialDifficulty={difficulty}
         initialMatchLength={matchLength}
+        initialLayout={boardLayout}
+        initialTheme={theme}
         onStartGame={handleStartNewGame}
         onClose={() => setSetupOpen(false)}
       />
