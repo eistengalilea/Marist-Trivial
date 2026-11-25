@@ -136,7 +136,7 @@ export class TrivialSceneController {
     });
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    this.renderer.toneMappingExposure = 1.0;
+    this.renderer.toneMappingExposure = 0.92;
     this.renderer.setPixelRatio(
       this.isSoftwareGl ? 1 : Math.min(window.devicePixelRatio, 2),
     );
@@ -182,11 +182,11 @@ export class TrivialSceneController {
     const hemiLight = new THREE.HemisphereLight(
       SCENE_COLORS.hemiSky,
       SCENE_COLORS.hemiGround,
-      0.9,
+      0.6,
     );
     this.scene.add(hemiLight);
 
-    const keyLight = new THREE.DirectionalLight(SCENE_COLORS.keyLight, 2.2);
+    const keyLight = new THREE.DirectionalLight(SCENE_COLORS.keyLight, 1.9);
     keyLight.position.set(11, 20, 12);
     keyLight.castShadow = true;
     keyLight.shadow.mapSize.width = 2048;
@@ -523,7 +523,7 @@ export class TrivialSceneController {
       return new THREE.Vector3(space.position[0], baseY, space.position[2]);
     }
 
-    const spreadRadius = space.kind === 'hub' ? 0.84 : 0.32;
+    const spreadRadius = space.kind === 'hub' ? 1.02 : 0.32;
     const angle = (idx / count) * Math.PI * 2 + Math.PI / 6;
     return new THREE.Vector3(
       space.position[0] + Math.cos(angle) * spreadRadius,
@@ -923,6 +923,14 @@ export class TrivialSceneController {
           );
         }
       }
+
+      // El símbolo de MarCha mira siempre a la cámara (solo giro en Y)
+      // y se inclina hacia atrás cuando la cámara está alta (vista cenital/2D)
+      const cam = this.activeCamera.position;
+      const dx = cam.x - tv.group.position.x;
+      const dz = cam.z - tv.group.position.z;
+      const pitch = Math.atan2(cam.y - tv.group.position.y, Math.hypot(dx, dz));
+      tv.logoGroup.rotation.set(-pitch * 0.8, Math.atan2(dx, dz), 0, 'YXZ');
 
       // Drop-in animation for newly earned wedges
       for (const catId of CATEGORY_ORDER) {

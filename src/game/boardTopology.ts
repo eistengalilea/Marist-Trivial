@@ -64,65 +64,73 @@ export const CATEGORY_ORDER: CategoryColorId[] = [
 ];
 
 /**
- * Colores de categoría derivados de la paleta Marista (ver src/theme/palette.ts):
- * Azul Champagnat, Magenta MarCha, Oro/Amarillo, Morado MarCha, Verde
- * Champagnat y Naranja MarCha. Se ajustaron luz/sombra para que los seis tonos
- * se distingan bien entre sí sobre el fondo azul marino.
+ * Categorías temáticas de Marist Trivial. Los colores siguen el Manual de la
+ * Marca MarCha 2022 (amarillo #D5A53C, lila #87689B, naranja #D37D00, verde
+ * #869830); el azul es el azul marista #3C82B9 (el azul oscuro #312A4E de la
+ * marca se reserva para fondos) y el rosa es el magenta #C6007E de la web de
+ * MarCha. Cada categoría lleva además un emblema propio para no depender
+ * solo del color.
  */
 export const CATEGORIES: Record<CategoryColorId, CategoryConfig> = {
   blue: {
     id: 'blue',
+    name: 'Geografía e historia marista',
+    shortName: 'Geografía e historia',
     colorName: 'Azul',
     hex: '#3C82B9',
-    lightHex: '#98C7EB',
-    darkHex: '#053A64',
+    lightHex: '#8FBCE0',
+    darkHex: '#1F527D',
     emblem: 'compass',
-    unassignedLabel: 'Categoría cromática sin nombrar',
   },
   pink: {
     id: 'pink',
+    name: 'Arte y Literatura',
+    shortName: 'Arte y Literatura',
     colorName: 'Rosa',
     hex: '#C6007E',
     lightHex: '#E85AAE',
     darkHex: '#7A004E',
     emblem: 'diamond',
-    unassignedLabel: 'Categoría cromática sin nombrar',
   },
   yellow: {
     id: 'yellow',
+    name: 'Historia universal',
+    shortName: 'Historia universal',
     colorName: 'Amarillo',
-    hex: '#F2C230',
-    lightHex: '#FBE38A',
-    darkHex: '#A87A12',
+    hex: '#D5A53C',
+    lightHex: '#EBCB7A',
+    darkHex: '#9C7420',
     emblem: 'star',
-    unassignedLabel: 'Categoría cromática sin nombrar',
   },
   purple: {
     id: 'purple',
+    name: 'MarCha',
+    shortName: 'MarCha',
     colorName: 'Morado',
-    hex: '#6F2DA8',
-    lightHex: '#A58BC2',
-    darkHex: '#3D0066',
+    hex: '#87689B',
+    lightHex: '#B7A3C6',
+    darkHex: '#5A4270',
     emblem: 'hex',
-    unassignedLabel: 'Categoría cromática sin nombrar',
   },
   green: {
     id: 'green',
+    name: 'Ciencias y Naturaleza',
+    shortName: 'Ciencias',
     colorName: 'Verde',
-    hex: '#62A329',
-    lightHex: '#9CCB5E',
-    darkHex: '#3F6B1A',
+    hex: '#869830',
+    lightHex: '#B2C25E',
+    darkHex: '#566318',
     emblem: 'leaf',
-    unassignedLabel: 'Categoría cromática sin nombrar',
   },
   orange: {
     id: 'orange',
+    name: 'Deportes y Pasatiempos u Ocio',
+    shortName: 'Deportes y Ocio',
     colorName: 'Naranja',
     hex: '#D37D00',
     lightHex: '#F0A040',
     darkHex: '#8A4A00',
     emblem: 'flame',
-    unassignedLabel: 'Categoría cromática sin nombrar',
   },
 };
 
@@ -237,7 +245,7 @@ export function buildTrivialBoard(): {
       spokeIndex: arc,
       spokeStep: 6,
       ringIndex: hqRingIdx,
-      label: `Sede de Quesito · ${CATEGORIES[hqCat].colorName}`,
+      label: `Sede de Quesito · ${CATEGORIES[hqCat].shortName}`,
     });
 
     // 7 spaces between hq_arc and hq_{(arc+1)%6}:
@@ -281,7 +289,7 @@ export function buildTrivialBoard(): {
           spokeIndex: null,
           spokeStep: null,
           ringIndex: rIdx,
-          label: `Casilla Exterior · ${CATEGORIES[cat].colorName}`,
+          label: `Casilla Exterior · ${CATEGORIES[cat].shortName}`,
         });
       }
     }
@@ -319,7 +327,7 @@ export function buildTrivialBoard(): {
         spokeIndex: i,
         spokeStep: step,
         ringIndex: null,
-        label: `Casilla Radial · ${CATEGORIES[cat].colorName}`,
+        label: `Casilla Radial · ${CATEGORIES[cat].shortName}`,
       });
     }
   }

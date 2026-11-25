@@ -41,7 +41,7 @@ export const RulesAnalysisModal: React.FC<RulesAnalysisModalProps> = ({
               Análisis de normas y arquitectura del tablero
             </h2>
             <p className="text-xs text-ink-400 mt-0.5">
-              Tablero cuadrado de 79 casillas · Categorías por color pendientes de nombrar
+              Tablero cuadrado de 79 casillas · 6 categorías temáticas
             </p>
           </div>
           <button
@@ -173,11 +173,11 @@ export const RulesAnalysisModal: React.FC<RulesAnalysisModalProps> = ({
             <div className="flex items-center gap-2 mb-3">
               <Compass className="w-4 h-4 text-gold-400 shrink-0" />
               <h3 className="text-base font-semibold text-ink-100">
-                2. Categorías por color y emblema (sin nombrar)
+                2. Categorías
               </h3>
             </div>
             <p className="text-ink-300 mb-4">
-              El tablero distribuye las seis categorías de forma simétrica: cada color posee exactamente 1 Sede de Quesito, 6 casillas perimetrales y 5 casillas radiales. Por ahora se identifican únicamente por su color y emblema geométrico:
+              El tablero distribuye las seis categorías de forma simétrica: cada color posee exactamente 1 Sede de Quesito, 6 casillas perimetrales y 5 casillas radiales. Cada categoría se identifica por su color y por un emblema geométrico:
             </p>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -202,11 +202,11 @@ export const RulesAnalysisModal: React.FC<RulesAnalysisModalProps> = ({
                       <CategoryEmblemSvg emblem={cat.emblem} className="w-5 h-5" />
                     </span>
                     <div className="min-w-0">
-                      <div className="font-medium text-ink-100 truncate">
-                        Color {cat.colorName}
+                      <div className="font-medium text-ink-100 leading-snug">
+                        {cat.name}
                       </div>
                       <div className="text-xs text-ink-400 truncate">
-                        12 casillas · Sin tema
+                        {cat.colorName} · 12 casillas
                       </div>
                     </div>
                   </button>

@@ -163,7 +163,7 @@ export const PlayerProgressModal: React.FC<PlayerProgressModalProps> = ({
                       </span>
                       <div className="min-w-0">
                         <div className="text-sm font-medium text-white truncate">
-                          Color {cat.colorName}
+                          {cat.name}
                         </div>
                         <div className="text-[11px] text-ink-400">
                           {hasWedge ? (
@@ -195,7 +195,7 @@ export const PlayerProgressModal: React.FC<PlayerProgressModalProps> = ({
                       className="h-full rounded-full transition-all duration-300"
                       style={{
                         width: `${pct}%`,
-                        backgroundColor: hasWedge ? '#62a329' : cat.hex,
+                        backgroundColor: hasWedge ? '#869830' : cat.hex,
                       }}
                     />
                   </div>

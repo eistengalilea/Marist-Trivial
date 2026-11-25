@@ -70,8 +70,13 @@ export const ChallengeModal: React.FC<ChallengeModalProps> = ({
                   >
                     <CategoryEmblemSvg emblem={cat.emblem} className="w-4 h-4" />
                   </span>
-                  <span className="text-sm font-medium text-ink-100">
-                    {cat.colorName}
+                  <span className="min-w-0">
+                    <span className="block text-sm font-medium text-ink-100 leading-tight">
+                      {cat.name}
+                    </span>
+                    <span className="block text-[11px] text-ink-400">
+                      {cat.colorName}
+                    </span>
                   </span>
                 </button>
               );
@@ -101,18 +106,18 @@ export const ChallengeModal: React.FC<ChallengeModalProps> = ({
   const isCorrect = selectedIdx === question.correctIndex;
 
   const titleText = isFinal
-    ? `Prueba Final · Color ${cat.colorName}`
+    ? `Prueba Final · ${cat.name}`
     : isHQ
-      ? `Sede de Quesito · Color ${cat.colorName}`
-      : `Pregunta · Color ${cat.colorName}`;
+      ? `Sede de Quesito · ${cat.name}`
+      : `${cat.name}`;
 
   const ruleOutcomeText = isCorrect
     ? isFinal
       ? 'Has superado el desafío final en la Casilla Central.'
       : completesWedgeNow
-        ? `¡Quesito ${cat.colorName} completado (${required}/${required})! Conservas el turno.`
+        ? `¡Quesito de ${cat.shortName} completado (${required}/${required})! Conservas el turno.`
         : !alreadyHasWedge
-          ? `Progreso en ${cat.colorName}: ${projectedProgress}/${required} (${
+          ? `Progreso en ${cat.shortName}: ${projectedProgress}/${required} (${
               remainingAfterSuccess === 1
                 ? 'falta 1 pregunta'
                 : `faltan ${remainingAfterSuccess} preguntas`
@@ -124,7 +129,7 @@ export const ChallengeModal: React.FC<ChallengeModalProps> = ({
     ? isFinal
       ? 'Proclamar ganador'
       : completesWedgeNow
-        ? `Recoger quesito ${cat.colorName}`
+        ? `Recoger quesito de ${cat.shortName}`
         : 'Volver a tirar'
     : 'Pasar turno';
 
@@ -212,7 +217,7 @@ export const ChallengeModal: React.FC<ChallengeModalProps> = ({
                     ? `${player.name} está eligiendo respuesta…`
                     : 'Selecciona una opción para girar la tarjeta'}
                 </span>
-                <span>Color {cat.colorName}</span>
+                <span>{cat.name}</span>
               </div>
             </div>
           </div>
@@ -234,7 +239,7 @@ export const ChallengeModal: React.FC<ChallengeModalProps> = ({
                 </div>
                 <div>
                   <div className="text-xs opacity-90">
-                    {player.name} · Color {cat.colorName}
+                    {player.name} · {cat.name}
                   </div>
                   <h3 className="text-base font-semibold leading-tight">
                     {isCorrect ? '¡Respuesta correcta!' : 'Respuesta incorrecta'}

@@ -1,17 +1,20 @@
 @import "tailwindcss";
 
 /*
- * Paleta Marista (ver src/theme/palette.ts):
- *  - MarCha Compostela: oro #D5A53C, magenta #C6007E, violeta #312A4E
- *  - Champagnat: azul marino #053A64 / #0F314B / #123652, azul #3C82B9,
- *    celeste #98C7EB, verde #62A329
+ * Paleta del Manual de la Marca MarCha 2022 (ver src/theme/palette.ts):
+ * azul oscuro #312A4E, lila #87689B, naranja #D37D00, verde #869830,
+ * amarillo #D5A53C. Tipografías: Montserrat (títulos) y Roboto (textos).
  */
 @theme {
-  --color-night: #071b2e;
-  --color-panel: #0f314b;
-  --color-raised: #123652;
-  --color-raised-hover: #1a4466;
-  --color-sunken: #0a2438;
+  --font-display: "Montserrat", system-ui, -apple-system, sans-serif;
+  --font-sans: "Roboto", system-ui, -apple-system, sans-serif;
+  --font-mono: "Roboto", ui-monospace, monospace;
+
+  --color-night: #17132a;
+  --color-panel: #241e3d;
+  --color-raised: #312a4e;
+  --color-raised-hover: #3d3561;
+  --color-sunken: #1c1733;
 
   --color-gold-50: #fbf6ea;
   --color-gold-100: #f6eacb;
@@ -25,19 +28,21 @@
   --color-gold-900: #3f2f10;
   --color-gold-950: #261c09;
 
-  --color-celeste-100: #e3f0fa;
-  --color-celeste-200: #c4e0f5;
-  --color-celeste-300: #98c7eb;
-  --color-celeste-400: #6aa8d8;
-  --color-celeste-500: #3c82b9;
-  --color-celeste-600: #2e6a9c;
-  --color-celeste-700: #1f527d;
+  /* Lila MarCha */
+  --color-lila-100: #efe9f4;
+  --color-lila-200: #d9cde4;
+  --color-lila-300: #b7a3c6;
+  --color-lila-400: #9d83b0;
+  --color-lila-500: #87689b;
+  --color-lila-600: #6e5281;
+  --color-lila-700: #5a4270;
 
-  --color-leaf-100: #e6f3d8;
-  --color-leaf-300: #a6d477;
-  --color-leaf-400: #82bf4a;
-  --color-leaf-500: #62a329;
-  --color-leaf-600: #4e8420;
+  /* Verde MarCha */
+  --color-leaf-100: #eef2d8;
+  --color-leaf-300: #c2d07a;
+  --color-leaf-400: #a3b54a;
+  --color-leaf-500: #869830;
+  --color-leaf-600: #6b7a24;
 
   --color-magenta-200: #f6b0d7;
   --color-magenta-300: #ee7dbe;
@@ -45,27 +50,21 @@
   --color-magenta-500: #c6007e;
   --color-magenta-600: #a00066;
 
-  /* Neutros con matiz azul marino para texto sobre fondos oscuros */
-  --color-ink-50: #f4f7fb;
-  --color-ink-100: #e8eef5;
-  --color-ink-200: #d3dde9;
-  --color-ink-300: #b4c3d6;
-  --color-ink-400: #93a8c2;
-  --color-ink-500: #6b7f9a;
-  --color-ink-600: #4e617c;
-  --color-ink-700: #36485f;
-  --color-ink-800: #22324a;
-  --color-ink-900: #152438;
-  --color-ink-950: #071b2e;
+  /* Neutros con matiz del azul oscuro MarCha para texto sobre fondo oscuro */
+  --color-ink-50: #f6f4fa;
+  --color-ink-100: #ece9f3;
+  --color-ink-200: #d8d3e5;
+  --color-ink-300: #bcb4d0;
+  --color-ink-400: #9c92b5;
+  --color-ink-500: #7b7096;
+  --color-ink-600: #5d5378;
+  --color-ink-700: #463e5e;
+  --color-ink-800: #312a4e;
+  --color-ink-900: #221d38;
+  --color-ink-950: #17132a;
 }
 
 @layer base {
-  :root {
-    --font-display: "Outfit", system-ui, -apple-system, sans-serif;
-    --font-sans: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
-    --font-mono: "JetBrains Mono", ui-monospace, monospace;
-  }
-
   html,
   body,
   #root {
@@ -104,11 +103,11 @@
   background: transparent;
 }
 .custom-scroll::-webkit-scrollbar-thumb {
-  background: rgba(152, 199, 235, 0.25);
+  background: rgba(183, 163, 198, 0.3);
   border-radius: 3px;
 }
 .custom-scroll::-webkit-scrollbar-thumb:hover {
-  background: rgba(152, 199, 235, 0.45);
+  background: rgba(183, 163, 198, 0.5);
 }
 
 /* 3D Card Flip Utilities */

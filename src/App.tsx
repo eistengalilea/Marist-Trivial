@@ -40,9 +40,10 @@ import { RulesAnalysisModal } from './components/RulesAnalysisModal';
 import { ChallengeModal } from './components/ChallengeModal';
 import { SetupModal } from './components/SetupModal';
 import { PlayerProgressModal } from './components/PlayerProgressModal';
+import { MarchaSymbol } from './components/MarchaSymbol';
 
 const DEFAULT_PLAYERS: PlayerConfig[] = [
-  { id: 'p1', name: 'Jugador 1', rimHex: '#fbf6ea', isCpu: false },
+  { id: 'p1', name: 'Jugador 1', rimHex: '#fbf8f3', isCpu: false },
   { id: 'p2', name: 'Jugador 2', rimHex: '#d5a53c', isCpu: true },
 ];
 
@@ -218,7 +219,7 @@ export default function App() {
           isRevealed: false,
         });
         setStatusMessage(
-          `${player.name} ha llegado al centro con los 6 quesitos. Prueba final en Color ${CATEGORIES[randomCat].colorName}.`,
+          `${player.name} ha llegado al centro con los 6 quesitos. Prueba final de ${CATEGORIES[randomCat].name}.`,
         );
       } else {
         setPhase('challenge');
@@ -473,12 +474,12 @@ export default function App() {
 
     if (earnedNewWedge && category) {
       setStatusMessage(
-        `¡Quesito ${CATEGORIES[category].colorName} completado! ${currentPlayer?.name ?? ''} conserva el turno.`,
+        `¡Quesito de ${CATEGORIES[category].shortName} completado! ${currentPlayer?.name ?? ''} conserva el turno.`,
       );
     } else if (category && currentPlayer && !currentPlayer.wedges[category]) {
       const remaining = Math.max(0, required - nextProgress);
       setStatusMessage(
-        `¡Acierto! ${currentPlayer.name}: ${nextProgress}/${required} en ${CATEGORIES[category].colorName} (${
+        `¡Acierto! ${currentPlayer.name}: ${nextProgress}/${required} en ${CATEGORIES[category].shortName} (${
           remaining === 1 ? 'falta 1 pregunta' : `faltan ${remaining} preguntas`
         }). Conserva el turno.`,
       );
@@ -779,7 +780,8 @@ export default function App() {
       <header className="fixed top-4 left-4 z-10 pointer-events-none max-w-[calc(100vw-290px)]">
         <div className="pointer-events-auto inline-flex flex-col gap-2.5 bg-panel/94 border border-white/10 rounded-xl px-4 py-3 shadow-lg">
           <div className="flex items-baseline gap-3 flex-wrap">
-            <h1 className="text-lg font-bold tracking-tight text-white whitespace-nowrap">
+            <h1 className="flex items-center gap-2 text-lg font-bold tracking-tight text-white whitespace-nowrap">
+              <MarchaSymbol fill="#ffffff" className="w-6 h-6" />
               Marist Trivial
             </h1>
             <span className="text-xs text-ink-400 whitespace-nowrap">
@@ -978,7 +980,7 @@ export default function App() {
                               : sp.kind === 'roll_again'
                                 ? 'Repite'
                                 : sp.category
-                                  ? CATEGORIES[sp.category].colorName
+                                  ? CATEGORIES[sp.category].shortName
                                   : sp.label}
                         </span>
                       </button>
@@ -991,7 +993,7 @@ export default function App() {
                 <button
                   type="button"
                   onClick={() => setHighlightFilter('none')}
-                  className="px-3 py-1.5 rounded-lg bg-celeste-500/15 border border-celeste-400/40 text-xs font-medium text-celeste-200 hover:bg-celeste-500/25 transition-colors whitespace-nowrap"
+                  className="px-3 py-1.5 rounded-lg bg-lila-500/15 border border-lila-400/40 text-xs font-medium text-lila-200 hover:bg-lila-500/25 transition-colors whitespace-nowrap"
                 >
                   Quitar resaltado
                 </button>

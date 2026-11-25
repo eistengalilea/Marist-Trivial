@@ -1,6 +1,8 @@
 import * as THREE from 'three';
 import { SCENE_COLORS } from '../theme/palette';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
+import { SVGLoader } from 'three/addons/loaders/SVGLoader.js';
+import { marchaSymbolSvg } from '../brand/marchaSymbol';
 import {
   BOARD_DIMENSIONS,
   CATEGORIES,
@@ -37,6 +39,8 @@ export interface PlayerTokenVisual {
   wedges: Record<CategoryColorId, THREE.Mesh>;
   wedgeAnimProgress: Record<CategoryColorId, number>;
   shadowPlane: THREE.Mesh;
+  /** Símbolo 3D de MarCha que se gira hacia la cámara. */
+  logoGroup: THREE.Group;
 }
 
 export interface CardCaddyVisual {
@@ -530,6 +534,91 @@ export function buildBoardAssembly(maxAnisotropy: number): {
   };
 }
 
+
+/** Geometría extruida del símbolo, compartida por todas las fichas. */
+let marchaSymbolGeometry: THREE.ExtrudeGeometry | null = null;
+const MARCHA_LOGO_HEIGHT = 0.7;
+const MARCHA_LOGO_DEPTH = 0.07;
+
+function getMarchaSymbolGeometry(): THREE.ExtrudeGeometry {
+  if (marchaSymbolGeometry) return marchaSymbolGeometry;
+  const svg = new SVGLoader().parse(marchaSymbolSvg());
+  const shapes = svg.paths.flatMap((p) => SVGLoader.createShapes(p));
+  const geo = new THREE.ExtrudeGeometry(shapes, {
+    depth: MARCHA_LOGO_DEPTH,
+    bevelEnabled: true,
+    bevelThickness: 0.012,
+    bevelSize: 0.6,
+    bevelSegments: 2,
+    curveSegments: 10,
+  });
+  // Unidades SVG → mundo: centrar y escalar. El eje Y del SVG crece hacia
+  // abajo; se corrige girando 180° en X (un escalado negativo invertiría el
+  // orden de los triángulos y las caras quedarían del revés).
+  geo.computeBoundingBox();
+  const bb = geo.boundingBox!;
+  const w = bb.max.x - bb.min.x;
+  const h = bb.max.y - bb.min.y;
+  const scale = MARCHA_LOGO_HEIGHT / h;
+  geo.translate(-(bb.min.x + w / 2), -(bb.min.y + h / 2), -MARCHA_LOGO_DEPTH / 2);
+  geo.scale(scale, scale, 1);
+  geo.rotateX(Math.PI);
+  geo.translate(0, MARCHA_LOGO_HEIGHT / 2, 0);
+  geo.computeVertexNormals();
+  marchaSymbolGeometry = geo;
+  return geo;
+}
+
+function relativeLuminance(hex: string): number {
+  const c = new THREE.Color(hex);
+  return 0.2126 * c.r + 0.7152 * c.g + 0.0722 * c.b;
+}
+
+/**
+ * Construye el símbolo de MarCha extruido en 3D con el color del jugador.
+ * Los huecos del símbolo (estrella, mano y violetas) se rellenan con una
+ * placa interior blanca, o azul oscuro MarCha si el color del jugador es claro,
+ * para que el dibujo se lea igual que en el logo plano.
+ */
+export function createMarchaSymbolMesh(
+  colorHex: string,
+  track: <T extends { dispose: () => void }>(item: T) => T,
+): THREE.Group {
+  const group = new THREE.Group();
+  const geo = getMarchaSymbolGeometry();
+  // Material mate con algo de emisión: el símbolo conserva el color exacto
+  // de la marca bajo la luz del estudio (con PBR el reflejo del entorno y el
+  // tone mapping lo dejaban en tono pastel).
+  const brandColor = new THREE.Color(colorHex);
+  const bodyMat = track(
+    new THREE.MeshLambertMaterial({
+      color: brandColor.clone().multiplyScalar(0.6),
+      emissive: brandColor.clone().multiplyScalar(0.45),
+    }),
+  );
+  const logoMesh = new THREE.Mesh(geo, bodyMat);
+  logoMesh.castShadow = true;
+  group.add(logoMesh);
+
+  const cutoutColor =
+    relativeLuminance(colorHex) > 0.35 ? 0x312a4e : SCENE_COLORS.logoCutout;
+  const plateMat = track(
+    new THREE.MeshStandardMaterial({
+      color: cutoutColor,
+      roughness: 0.55,
+      metalness: 0.0,
+    }),
+  );
+  const plateW = MARCHA_LOGO_HEIGHT * 0.9;
+  const plateGeo = track(
+    new RoundedBoxGeometry(plateW, MARCHA_LOGO_HEIGHT * 0.9, MARCHA_LOGO_DEPTH * 0.5, 2, 0.04),
+  );
+  const plate = new THREE.Mesh(plateGeo, plateMat);
+  plate.position.y = MARCHA_LOGO_HEIGHT / 2;
+  group.add(plate);
+  return group;
+}
+
 /**
  * Creates a 10-part composite 3D Trivial Pursuit pie-holder player token
  * grounded at bottom-center (y = 0).
@@ -606,7 +695,7 @@ export function createPlayerToken(
   trayMesh.position.y = 0.085;
   bodyGroup.add(trayMesh);
 
-  // 4. Brass radial divider fins + central grip knob
+  // 4. Divisores dorados entre quesitos
   const brassMat = track(
     new THREE.MeshStandardMaterial({
       color: SCENE_COLORS.goldBright,
@@ -624,18 +713,18 @@ export function createPlayerToken(
     bodyGroup.add(fin);
   }
 
-  const knobProfile = [
-    new THREE.Vector2(0, 0.08),
-    new THREE.Vector2(0.085, 0.08),
-    new THREE.Vector2(0.07, 0.32),
-    new THREE.Vector2(0.11, 0.39),
-    new THREE.Vector2(0.095, 0.46),
-    new THREE.Vector2(0, 0.48),
-  ];
-  const knobGeo = track(new THREE.LatheGeometry(knobProfile, 24));
-  const knobMesh = new THREE.Mesh(knobGeo, brassMat);
-  knobMesh.castShadow = true;
-  bodyGroup.add(knobMesh);
+  // Poste central que sostiene el símbolo de MarCha
+  const postGeo = track(new THREE.CylinderGeometry(0.05, 0.075, 0.26, 16));
+  const postMesh = new THREE.Mesh(postGeo, brassMat);
+  postMesh.position.y = 0.21;
+  postMesh.castShadow = true;
+  bodyGroup.add(postMesh);
+
+  // Símbolo de MarCha en 3D, del color del jugador. Se orienta hacia la
+  // cámara en cada fotograma (ver TrivialSceneController).
+  const logo = createMarchaSymbolMesh(rimHex, track);
+  logo.position.y = 0.33;
+  bodyGroup.add(logo);
 
   // 5. 6 Individual 3D Extruded Wedges ("Quesitos")
   const wedges = {} as Record<CategoryColorId, THREE.Mesh>;
@@ -698,6 +787,7 @@ export function createPlayerToken(
       wedges,
       wedgeAnimProgress,
       shadowPlane,
+      logoGroup: logo,
     },
     disposables,
   };

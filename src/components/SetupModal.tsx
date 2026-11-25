@@ -9,21 +9,21 @@ import {
 import type { DifficultyLevel, MatchLength, PlayerConfig } from '../game/types';
 
 const TOKEN_FINISHES = [
-  { label: 'Marfil', hex: '#fbf6ea' },
-  { label: 'Oro MarCha', hex: '#d5a53c' },
-  { label: 'Celeste Champagnat', hex: '#98c7eb' },
-  { label: 'Magenta MarCha', hex: '#c6007e' },
-  { label: 'Verde Champagnat', hex: '#62a329' },
+  { label: 'Blanco', hex: '#fbf8f3' },
+  { label: 'Amarillo MarCha', hex: '#d5a53c' },
+  { label: 'Naranja MarCha', hex: '#d37d00' },
+  { label: 'Verde MarCha', hex: '#869830' },
   { label: 'Lila MarCha', hex: '#87689b' },
+  { label: 'Magenta MarCha', hex: '#c6007e' },
 ];
 
 const BASE_DEFAULTS: PlayerConfig[] = [
-  { id: 'p1', name: 'Jugador 1', rimHex: '#fbf6ea', isCpu: false },
+  { id: 'p1', name: 'Jugador 1', rimHex: '#fbf8f3', isCpu: false },
   { id: 'p2', name: 'Jugador 2', rimHex: '#d5a53c', isCpu: true },
-  { id: 'p3', name: 'Jugador 3', rimHex: '#98c7eb', isCpu: true },
-  { id: 'p4', name: 'Jugador 4', rimHex: '#c6007e', isCpu: true },
-  { id: 'p5', name: 'Jugador 5', rimHex: '#62a329', isCpu: true },
-  { id: 'p6', name: 'Jugador 6', rimHex: '#87689b', isCpu: true },
+  { id: 'p3', name: 'Jugador 3', rimHex: '#d37d00', isCpu: true },
+  { id: 'p4', name: 'Jugador 4', rimHex: '#869830', isCpu: true },
+  { id: 'p5', name: 'Jugador 5', rimHex: '#87689b', isCpu: true },
+  { id: 'p6', name: 'Jugador 6', rimHex: '#c6007e', isCpu: true },
 ];
 
 interface SetupModalProps {
@@ -242,7 +242,7 @@ export const SetupModal: React.FC<SetupModalProps> = ({
                   onClick={() => updateDraft(idx, { isCpu: !player.isCpu })}
                   className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium border shrink-0 transition-colors whitespace-nowrap ${
                     player.isCpu
-                      ? 'bg-celeste-500/15 text-celeste-300 border-celeste-400/35'
+                      ? 'bg-lila-500/15 text-lila-300 border-lila-400/35'
                       : 'bg-white/8 text-ink-200 border-white/15'
                   }`}
                 >
