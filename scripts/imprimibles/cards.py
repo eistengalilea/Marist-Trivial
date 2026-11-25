@@ -35,87 +35,98 @@ def footer(o, diff):
         o.append(f'<circle cx="{8.2 + text_w(t['diff'],'Roboto','Regular',2.2) + i*3}" cy="{y-0.75}" r="0.95" fill="{GOLD if i < diff else "none"}" stroke="{GOLD}" stroke-width="0.35"/>')
     o.append(f'<text x="{CW-5}" y="{y}" class="r" font-size="2.2" fill="{NAVY}" opacity="0.7" text-anchor="end">{t['foot']}</text>')
 
+TOP, BOTTOM = 14.2, CH - 9.2
+ROW = (BOTTOM - TOP) / 6
+X0 = 13.6
+COLW = CW - X0 - 4.6
+IND = 2.9  # sangría del texto de cada opción tras su letra
+
 def stripe(o, y, h, cat):
     c = CATS[cat]
-    o.append(f'<rect x="4" y="{y}" width="7" height="{h}" rx="1.2" fill="{c["hex"]}"/>')
-    o.append(emblem(c['emblem'], 7.5, y + 4.2, 4.4, '#FFFFFF'))
+    o.append(f'<rect x="4" y="{y:.2f}" width="7" height="{h:.2f}" rx="1.2" fill="{c["hex"]}"/>')
+    o.append(emblem(c['emblem'], 7.5, y + h/2, 4.4, '#FFFFFF'))
 
-def layout_front(qs, scale):
-    qs_size, op_size = 7.6*PT*scale, 6.9*PT*scale
-    x0, colw = 13.5, CW - 13.5 - 4.5
-    blocks = []
-    for q in qs:
-        ql = wrap(q['prompt'], 'Roboto', 'SemiBold', qs_size, colw)
-        opts = [f'{"ABCD"[i]}  {t}' for i, t in enumerate(q['options'])]
-        half = (colw - 2) / 2
-        two = all(text_w(t, 'Roboto', 'Regular', op_size) <= half for t in opts)
-        if two:
-            rows = [[[opts[0]], [opts[1]]], [[opts[2]], [opts[3]]]]
-            oh = 2
-        else:
-            rows = [wrap(t, 'Roboto', 'Regular', op_size, colw) for t in opts]
-            oh = sum(len(r) for r in rows)
-        h = len(ql)*qs_size*1.22 + 0.9 + oh*op_size*1.28 + 0.3
-        blocks.append((q, ql, two, rows, max(h, 8.6)))
-    return blocks, qs_size, op_size, x0, colw
+def row_frame(o, k, cat):
+    y = TOP + k*ROW
+    if k: o.append(f'<line x1="4" y1="{y:.2f}" x2="{CW-4}" y2="{y:.2f}" stroke="{NAVY}" stroke-opacity="0.12" stroke-width="0.25"/>')
+    stripe(o, y + 1.1, ROW - 2.2, cat)
+    return y
+
+def opt(o, x, y, letter, lines, size, lh, col):
+    o.append(f'<text x="{x:.2f}" y="{y:.2f}" class="r" font-size="{size:.2f}" font-weight="700" fill="{col}">{letter}</text>')
+    o.append(tlines(x + IND*size/2.4, y, lines, size, lh, 'r', 400, '#3a3550'))
+
+def front_block(q, scale):
+    qs, op = 7.4*PT*scale, 6.8*PT*scale
+    ql = wrap(q['prompt'], 'Roboto', 'SemiBold', qs, COLW)
+    ind = IND*op/2.4
+    half = (COLW - 2) / 2
+    two = all(text_w(t, 'Roboto', 'Regular', op) <= half - ind for t in q['options'])
+    if two:
+        rows = None; oh = 2
+    else:
+        rows = [wrap(t, 'Roboto', 'Regular', op, COLW - ind) for t in q['options']]
+        oh = sum(len(r) for r in rows)
+    h = qs*0.95 + (len(ql)-1)*qs*1.2 + 2.0 + op*0.8 + (oh-1)*op*1.25 + op*0.25
+    return dict(ql=ql, two=two, rows=rows, h=h, qs=qs, op=op)
 
 def front(n):
     qs = [by[c][n-1] for c in ORDER]
     o = header(n)
-    avail = CH - 13 - 9 - 2
-    scale = 1.0
-    while True:
-        blocks, qs_size, op_size, x0, colw = layout_front(qs, scale)
-        total = sum(b[4] for b in blocks)
-        gap = (avail - total) / 6
-        if gap >= 1.2 or scale < 0.7: break
-        scale -= 0.03
-    y = 15.2
-    for (q, ql, two, rows, h) in blocks:
-        stripe(o, y, h, q['color'])
-        yy = y + qs_size*0.95
-        o.append(tlines(x0, yy, ql, qs_size, qs_size*1.22, 'r', 600, NAVY))
-        yy += len(ql)*qs_size*1.22 + 0.9 - qs_size*0.2 + op_size*0.8
-        if two:
-            for r in rows:
-                o.append(tlines(x0, yy, r[0], op_size, 0, 'r', 400, '#3a3550'))
-                o.append(tlines(x0 + (colw+2)/2, yy, r[1], op_size, 0, 'r', 400, '#3a3550'))
-                yy += op_size*1.28
+    for k, q in enumerate(qs):
+        y = row_frame(o, k, q['color'])
+        scale = 1.0
+        b = front_block(q, scale)
+        while b['h'] > ROW - 2.6 and scale > 0.78:
+            scale -= 0.02; b = front_block(q, scale)
+        top = y + (ROW - b['h'])/2
+        col = CATS[q['color']]['dark']
+        yy = top + b['qs']*0.95
+        o.append(tlines(X0, yy, b['ql'], b['qs'], b['qs']*1.2, 'r', 600, NAVY))
+        yy += (len(b['ql'])-1)*b['qs']*1.2 + 2.0 + b['op']*0.8
+        if b['two']:
+            for r in range(2):
+                for c in range(2):
+                    i = r*2 + c
+                    opt(o, X0 + c*(COLW+2)/2, yy, 'ABCD'[i], [q['options'][i]], b['op'], 0, col)
+                yy += b['op']*1.25
         else:
-            for r in rows:
-                o.append(tlines(x0, yy, r, op_size, op_size*1.28, 'r', 400, '#3a3550'))
-                yy += len(r)*op_size*1.28
-        y += h + gap
+            for i, lines in enumerate(b['rows']):
+                opt(o, X0, yy, 'ABCD'[i], lines, b['op'], b['op']*1.25, col)
+                yy += len(lines)*b['op']*1.25
     footer(o, round(sum(DIFF[q['difficulty']] for q in qs)/6))
     o.append(f'<rect x="0.15" y="0.15" width="{CW-0.3}" height="{CH-0.3}" rx="3.5" fill="none" stroke="{NAVY}" stroke-opacity="0.25" stroke-width="0.3"/>')
     return ''.join(o)
 
+def back_block(q, scale):
+    a, e = 7.6*PT*scale, 6.3*PT*scale
+    letter = 'ABCD'[q['correctIndex']]
+    al = wrap(q['options'][q['correctIndex']], 'Roboto', 'Bold', a, COLW - IND*a/2.4)
+    el = wrap(q['explanation'], 'Roboto', 'Regular', e, COLW)
+    h = a*0.95 + (len(al)-1)*a*1.2 + 1.6 + e*0.8 + (len(el)-1)*e*1.3 + e*0.25
+    return dict(letter=letter, al=al, el=el, a=a, e=e, h=h)
+
 def back(n):
     qs = [by[c][n-1] for c in ORDER]
     o = header(n, back=True)
-    a_size, e_size = 7.8*PT, 6.4*PT
-    x0, colw = 13.5, CW - 13.5 - 4.5
-    blocks = []
-    for q in qs:
-        ans = f'{"ABCD"[q["correctIndex"]]} · {q["options"][q["correctIndex"]]}'
-        al = wrap(ans, 'Roboto', 'Bold', a_size, colw)
-        el = wrap(q['explanation'], 'Roboto', 'Regular', e_size, colw)
-        h = len(al)*a_size*1.22 + 0.8 + len(el)*e_size*1.3
-        blocks.append((q, al, el, max(h, 8.6)))
-    gap = (CH - 13 - 9 - 2 - sum(b[3] for b in blocks)) / 6
-    y = 15.2
-    for q, al, el, h in blocks:
-        stripe(o, y, h, q['color'])
-        yy = y + a_size*0.95
-        o.append(tlines(x0, yy, al, a_size, a_size*1.22, 'r', 700, CATS[q['color']]['dark']))
-        yy += len(al)*a_size*1.22 + 0.8 - a_size*0.2 + e_size*0.8
-        o.append(tlines(x0, yy, el, e_size, e_size*1.3, 'r', 400, '#4a4560'))
-        y += h + gap
+    worst = 99
+    for k, q in enumerate(qs):
+        y = row_frame(o, k, q['color'])
+        scale = 1.0; b = back_block(q, scale)
+        while b['h'] > ROW - 2.6 and scale > 0.78:
+            scale -= 0.02; b = back_block(q, scale)
+        worst = min(worst, ROW - b['h'])
+        top = y + (ROW - b['h'])/2
+        col = CATS[q['color']]['dark']
+        yy = top + b['a']*0.95
+        o.append(f'<text x="{X0}" y="{yy:.2f}" class="r" font-size="{b["a"]:.2f}" font-weight="700" fill="{col}">{b["letter"]}</text>')
+        o.append(tlines(X0 + IND*b['a']/2.4, yy, b['al'], b['a'], b['a']*1.2, 'r', 700, col))
+        yy += (len(b['al'])-1)*b['a']*1.2 + 1.6 + b['e']*0.8
+        o.append(tlines(X0, yy, b['el'], b['e'], b['e']*1.3, 'r', 400, '#4a4560'))
     footer(o, round(sum(DIFF[q['difficulty']] for q in qs)/6))
     o.append(f'<rect x="0.15" y="0.15" width="{CW-0.3}" height="{CH-0.3}" rx="3.5" fill="none" stroke="{NAVY}" stroke-opacity="0.25" stroke-width="0.3"/>')
-    return ''.join(o), gap
+    return ''.join(o), worst
 
-# muestra: tarjeta 1 suelta + hoja A4 con tarjetas 1-4 (anverso y reverso espejado)
 def crop(o, x, y):
     for (cx, cy) in [(x, y), (x+CW, y), (x, y+CH), (x+CW, y+CH)]:
         for dx, dy in [(-1,0),(1,0),(0,-1),(0,1)]:
@@ -143,10 +154,10 @@ def sheet(nums, backside):
 def check():
     bad = []
     for n in range(1, 21):
-        blocks, *_ = layout_front([by[c][n-1] for c in ORDER], 1.0)
-        fgap = (CH-24-sum(b[4] for b in blocks))/6
-        bgap = back(n)[1]
-        if fgap < 1.2 or bgap < 0.8: bad.append((n, round(fgap,2), round(bgap,2)))
+        for q in [by[c][n-1] for c in ORDER]:
+            for fn in (front_block, back_block):
+                b = fn(q, 0.78)
+                if b['h'] > ROW - 1.2: bad.append((n, q['id'], fn.__name__, round(b['h'], 1)))
     return bad
 
 def sheets():

@@ -31,8 +31,7 @@ def build(lang):
                 o.append(f'<rect x="{x}" y="{yy}" width="{pw}" height="{h}" fill="{NAVY}"/>')
                 o.append(f'<rect x="{x+1.2}" y="{yy+1.2}" width="{pw-2.4}" height="{h-2.4}" rx="1.5" fill="none" stroke="{col}" stroke-width="0.5"/>')
                 rot = 180 if k == 1 else 0
-                o.append(f'<g transform="rotate({rot} {x+pw/2} {yy+h/2})">{symbol(x+pw/2, yy+h/2-1.5, 15, col)}'
-                         f'<text x="{x+pw/2}" y="{yy+h-3}" class="m" font-size="2.6" font-weight="800" fill="{col}" text-anchor="middle">{t["P"]}{i+1}</text></g>')
+                o.append(f'<g transform="rotate({rot} {x+pw/2} {yy+h/2})">{symbol(x+pw/2, yy+h/2, 17, col)}</g>')
             else:
                 o.append(f'<rect x="{x}" y="{yy}" width="{pw}" height="{h}" fill="{col}" fill-opacity="0.25"/>')
                 o.append(f'<text x="{x+pw/2}" y="{yy+h/2+0.9}" class="r" font-size="2.2" fill="#666" text-anchor="middle">{t["glue"] if k == 0 else t["base"]}</text>')
@@ -53,7 +52,7 @@ def build(lang):
             o.append(emblem(c['emblem'], cx + math.cos(a)*17, cy + math.sin(a)*17, 5, c['hex']))
         o.append(f'<circle cx="{cx}" cy="{cy}" r="7.6" fill="{NAVY_DD}" stroke="{col}" stroke-width="0.6"/>')
         o.append(symbol(cx, cy, 9, col))
-        o.append(f'<text x="{cx}" y="{cy+R+7.5}" class="m" font-size="2.8" font-weight="700" fill="{NAVY}" text-anchor="middle">{t["player"]} {i+1}</text>')
+        pass
     sheet1 = svg_doc(AW, AH, ''.join(o), 'Marist Trivial · ' + t['tokens'] + ' 1')
 
     # ---------- Hoja 2: quesitos + dado ----------
