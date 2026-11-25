@@ -621,9 +621,9 @@ export const QUESTION_BANK: TriviaQuestion[] = [
     color: 'purple',
     difficulty: 'medium',
     prompt: "¿Qué simbolizan las tres violetas maristas del logo?",
-    options: ["Fe, esperanza y caridad", "Sencillez, espíritu de familia y amor al trabajo bien hecho", "Pasado, presente y futuro", "Oración, estudio y deporte"],
+    options: ["Fe, esperanza y caridad", "Humildad, sencillez y modestia", "Pasado, presente y futuro", "Oración, estudio y deporte"],
     correctIndex: 1,
-    explanation: "Las tres violetas recogen las tres virtudes maristas tradicionales.",
+    explanation: "Las tres violetas simbolizan la humildad, la sencillez y la modestia, las «pequeñas virtudes» que Champagnat propuso a los Hermanos.",
   },
   {
     id: 'mc8',

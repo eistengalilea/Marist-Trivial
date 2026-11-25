@@ -75,7 +75,7 @@ export const QUESTIONS_GL: Record<string, QuestionTranslation> = {
   mc4: ['Cal é o lema de MarCha?', ['Somos MarCha', 'Imos xuntos', 'Sempre adiante', 'Todos a unha'], '«Somos MarCha» é outro elemento da identidade visual do movemento.'],
   mc5: ['Cantas etapas ten MarCha?', ['Tres', 'Catro', 'Cinco', 'Sete'], 'As cinco etapas son Amencer, Aventura, Camiño, Fonte e Horizonte.'],
   mc6: ['Cal destas NON é unha etapa de MarCha?', ['Fonte', 'Camiño', 'Cume', 'Aventura'], 'As etapas son Amencer, Aventura, Camiño, Fonte e Horizonte: non existe «Cume».'],
-  mc7: ['Que simbolizan as tres violetas maristas do logo?', ['Fe, esperanza e caridade', 'Sinxeleza, espírito de familia e amor ao traballo ben feito', 'Pasado, presente e futuro', 'Oración, estudo e deporte'], 'As tres violetas recollen as tres virtudes maristas tradicionais.'],
+  mc7: ['Que simbolizan as tres violetas maristas do logo?', ['Fe, esperanza e caridade', 'Humildade, sinxeleza e modestia', 'Pasado, presente e futuro', 'Oración, estudo e deporte'], 'As tres violetas simbolizan a humildade, a sinxeleza e a modestia, as «pequenas virtudes» que Champagnat lles propuxo aos Irmáns.'],
   mc8: ['No símbolo de MarCha, que fai a man?', ['Saúda', 'Dá e recibe, e alcanza a estrela', 'Sostén unha vela', 'Sinala o camiño'], 'A man, que dá e recibe, alcanza a estrela de Compostela.'],
   mc9: ['Cal é a cor principal de MarCha?', ['Vermello', 'Verde', 'Azul escuro', 'Laranxa'], 'O azul escuro (#312A4E) é a cor principal; as demais inspíranse nas violetas.'],
   mc10: ['Cal é a primeira etapa de MarCha?', ['Horizonte', 'Camiño', 'Amencer', 'Fonte'], 'Amencer abre o itinerario, seguido de Aventura, Camiño, Fonte e Horizonte.'],
