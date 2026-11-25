@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Genera los materiales imprimibles (tablero, tarjetas y fichas) en ES, PT y GL
+# Genera los materiales imprimibles (tablero, tarjetas, fichas y manual) en ES, PT y GL
 # dentro de public/imprimibles/. Requisitos: Node 22+, Python 3 con Pillow y
 # Playwright con Chromium (`npm i -D playwright && npx playwright install chromium`).
 set -euo pipefail
@@ -18,5 +18,8 @@ node --experimental-strip-types dump.mjs \
   "$ROOT/src/i18n/questions.pt.ts" "$ROOT/src/i18n/questions.gl.ts" "$ROOT/src/i18n/messages.ts" > "$CACHE/data.json"
 python3 build.py "$ROOT/public/imprimibles" "$CACHE/preview"
 node render_jobs.cjs "$CACHE/jobs.json"
+# Manual de instrucciones (HTML -> PDF)
+python3 manual.py "$ROOT/public/imprimibles" "$CACHE/preview"
+node render_manual.cjs "$CACHE/manual_jobs.json"
 python3 thumbs.py "$CACHE/preview" "$ROOT/public/imprimibles/preview"
 echo "Listo: $ROOT/public/imprimibles"
