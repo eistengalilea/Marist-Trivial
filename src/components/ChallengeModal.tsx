@@ -4,15 +4,18 @@ import {
   CATEGORIES,
   CATEGORY_ORDER,
   MATCH_LENGTH_CONFIGS,
+  TIMED_SECONDS,
 } from '../game/boardTopology';
 import type {
   ActiveChallenge,
   CategoryColorId,
+  GameMode,
   MatchLength,
   PlayerState,
 } from '../game/types';
 import { CategoryEmblemSvg } from './CategoryEmblemSvg';
 import { MarchaSymbol } from './MarchaSymbol';
+import { ChallengeTimer } from './ChallengeTimer';
 import { localizeQuestion, useI18n } from '../i18n/I18nContext';
 
 const OPTION_LETTERS = ['A', 'B', 'C', 'D'] as const;
@@ -34,18 +37,25 @@ interface ChallengeModalProps {
   challenge: ActiveChallenge | null;
   player: PlayerState | null;
   matchLength: MatchLength;
+  gameMode: GameMode;
+  /** Pausa el cronómetro mientras hay otra ventana abierta. */
+  paused: boolean;
   onSelectHubCategory: (catId: CategoryColorId) => void;
   onSelectAnswer: (optionIndex: number) => void;
   onConfirmOutcome: () => void;
+  onTimeUp: () => void;
 }
 
 export const ChallengeModal: React.FC<ChallengeModalProps> = ({
   challenge,
   player,
   matchLength,
+  gameMode,
+  paused,
   onSelectHubCategory,
   onSelectAnswer,
   onConfirmOutcome,
+  onTimeUp,
 }) => {
   const { lang, m } = useI18n();
   if (!challenge || !player) return null;
@@ -123,6 +133,8 @@ export const ChallengeModal: React.FC<ChallengeModalProps> = ({
   const isFlipped = challenge.isRevealed;
   const selectedIdx = challenge.selectedOptionIndex;
   const isCorrect = selectedIdx === question.correctIndex;
+  const timedOut = selectedIdx === -1;
+  const timed = gameMode === 'timed';
 
   const titleText = isFinal
     ? m.challenge.finalTitle(catText.name)
@@ -143,7 +155,9 @@ export const ChallengeModal: React.FC<ChallengeModalProps> = ({
               m.remaining(remainingAfterSuccess),
             )
           : m.challenge.correctKeep
-    : m.challenge.wrongPass;
+    : timedOut
+      ? m.challenge.timeUpPass
+      : m.challenge.wrongPass;
 
   const continueLabel = isCorrect
     ? isFinal
@@ -223,6 +237,17 @@ export const ChallengeModal: React.FC<ChallengeModalProps> = ({
             style={{ backgroundColor: CARD.paper, color: CARD.navy }}
           >
             <CardHeader />
+            {timed && (
+              <div className="px-5 pt-4">
+                <ChallengeTimer
+                  key={question.id}
+                  seconds={TIMED_SECONDS[question.difficulty] ?? 30}
+                  running={!isFlipped && !paused}
+                  label={m.challenge.timeLeft}
+                  onTimeUp={onTimeUp}
+                />
+              </div>
+            )}
             <div className="p-5 flex-1 flex flex-col gap-4">
               <div className="flex gap-3.5">
                 <Stripe />
@@ -276,8 +301,8 @@ export const ChallengeModal: React.FC<ChallengeModalProps> = ({
                 style={{ backgroundColor: isCorrect ? '#6b7a24' : '#a00066' }}
               >
                 {isCorrect ? <Check className="w-4 h-4" /> : <X className="w-4 h-4" />}
-                {isCorrect ? m.challenge.correct : m.challenge.wrong}
-                {!isCorrect && selectedIdx !== null && selectedIdx !== undefined && (
+                {isCorrect ? m.challenge.correct : timedOut ? m.challenge.timeUp : m.challenge.wrong}
+                {!isCorrect && selectedIdx !== null && selectedIdx !== undefined && selectedIdx >= 0 && (
                   <span className="font-normal opacity-90">
                     · {OPTION_LETTERS[selectedIdx]} {question.options[selectedIdx]}
                   </span>

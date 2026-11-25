@@ -39,6 +39,7 @@ import type {
   MatchLength,
   PlayerConfig,
   PlayerState,
+  GameMode,
 } from './game/types';
 import { TrivialSceneController } from './three/TrivialSceneController';
 import { applySceneTheme, type GameTheme } from './theme/palette';
@@ -122,6 +123,20 @@ export default function App() {
       return 'square';
     }
   });
+  const [gameMode, setGameMode] = useState<GameMode>(() => {
+    try {
+      return localStorage.getItem('marist-trivial-mode') === 'timed' ? 'timed' : 'classic';
+    } catch {
+      return 'classic';
+    }
+  });
+  useEffect(() => {
+    try {
+      localStorage.setItem('marist-trivial-mode', gameMode);
+    } catch {
+      /* sin almacenamiento: no pasa nada */
+    }
+  }, [gameMode]);
   const [theme, setTheme] = useState<GameTheme>(() => {
     try {
       return localStorage.getItem('marist-trivial-theme') === 'light' ? 'light' : 'dark';
@@ -491,7 +506,7 @@ export default function App() {
     const success = selectedOptionIndex === question.correctIndex;
 
     if (!success) {
-      advanceTurn((msgs) => msgs.status.wrong);
+      advanceTurn((msgs) => (selectedOptionIndex === -1 ? msgs.status.timeUp : msgs.status.wrong));
       return;
     }
 
@@ -685,12 +700,14 @@ export default function App() {
     nextMatchLength: MatchLength,
     nextLayout: BoardLayout,
     nextTheme: GameTheme,
+    nextMode: GameMode,
   ) => {
     soundFX.playUiClick();
     // El tablero nuevo debe existir antes de colocar las fichas en la salida
     setBoardLayout(nextLayout);
     setBoardLayoutState(nextLayout);
     setTheme(nextTheme);
+    setGameMode(nextMode);
     questionDecksRef.current = createQuestionDecks();
     const fresh = buildInitialPlayers(configs);
     setDifficulty(nextDifficulty);
@@ -871,7 +888,11 @@ export default function App() {
               Marist Trivial
             </h1>
             <span className="text-xs text-ink-400 whitespace-nowrap">
-              {m.header.matchInfo(m.length[matchLength].label, m.difficulty[difficulty].label)}
+              {m.header.matchInfo(
+                m.length[matchLength].label,
+                m.difficulty[difficulty].label,
+                gameMode === 'timed' ? m.setup.timed : m.setup.classic,
+              )}
             </span>
           </div>
 
@@ -1209,6 +1230,9 @@ export default function App() {
         onSelectHubCategory={handleSelectHubCategory}
         onSelectAnswer={handleSelectAnswer}
         onConfirmOutcome={handleConfirmOutcome}
+        gameMode={gameMode}
+        paused={rulesOpen || printablesOpen || setupOpen || inspectedPlayerId !== null}
+        onTimeUp={() => handleSelectAnswer(-1)}
       />
 
       {/* Player Category Progress Modal */}
@@ -1243,6 +1267,7 @@ export default function App() {
         initialMatchLength={matchLength}
         initialLayout={boardLayout}
         initialTheme={theme}
+        initialMode={gameMode}
         onStartGame={handleStartNewGame}
         onClose={() => setSetupOpen(false)}
       />
