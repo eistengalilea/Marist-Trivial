@@ -384,11 +384,9 @@ export function buildBoardAssembly(maxAnisotropy: number): {
     tileGroup.position.set(space.position[0], 0.04, space.position[2]);
 
     if (space.kind === 'hub') {
-      // Multi-part Central Square Brass Hub Pedestal housing 6-sector medallion
-      const hubSide = (BOARD_DIMENSIONS.hubRadius + 0.16) * 2;
-      const hubBaseGeo = track(
-        new RoundedBoxGeometry(hubSide, 0.14, hubSide, 3, 0.08),
-      );
+      // Round brass hub pedestal (thin rim only) so it never overlaps the spoke tiles
+      const hubBaseR = BOARD_DIMENSIONS.hubRadius + 0.08;
+      const hubBaseGeo = track(new THREE.CylinderGeometry(hubBaseR, hubBaseR, 0.14, 72));
       const hubBezelMat = track(
         new THREE.MeshStandardMaterial({
           color: SCENE_COLORS.gold,
