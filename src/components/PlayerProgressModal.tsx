@@ -154,7 +154,7 @@ export const PlayerProgressModal: React.FC<PlayerProgressModalProps> = ({
                   <div className="flex items-center justify-between gap-2.5 mb-2.5">
                     <div className="flex items-center gap-2.5 min-w-0">
                       <span
-                        className="w-8 h-8 rounded-md flex items-center justify-center text-white shrink-0"
+                        className="w-8 h-8 rounded-md flex items-center justify-center text-[#fff] shrink-0"
                         style={{ backgroundColor: cat.hex }}
                       >
                         <CategoryEmblemSvg

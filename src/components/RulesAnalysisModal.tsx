@@ -197,7 +197,7 @@ export const RulesAnalysisModal: React.FC<RulesAnalysisModalProps> = ({
                     }`}
                   >
                     <span
-                      className="w-9 h-9 rounded-lg flex items-center justify-center text-white shrink-0 shadow-inner"
+                      className="w-9 h-9 rounded-lg flex items-center justify-center text-[#fff] shrink-0 shadow-inner"
                       style={{ backgroundColor: cat.hex }}
                     >
                       <CategoryEmblemSvg emblem={cat.emblem} className="w-5 h-5" />

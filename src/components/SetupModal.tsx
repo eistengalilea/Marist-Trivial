@@ -1,12 +1,15 @@
 import React, { useEffect, useState } from 'react';
-import { X, Users, Bot, User, Gauge, Clock } from 'lucide-react';
+import { X, Users, Bot, User, Gauge, Clock, Square, Circle, Sun, Moon, SunMoon } from 'lucide-react';
 import {
+  BOARD_LAYOUTS,
+  type BoardLayout,
   DIFFICULTY_ORDER,
   MATCH_LENGTH_CONFIGS,
   MATCH_LENGTH_ORDER,
 } from '../game/boardTopology';
 import type { DifficultyLevel, MatchLength, PlayerConfig } from '../game/types';
 import { useI18n } from '../i18n/I18nContext';
+import type { GameTheme } from '../theme/palette';
 
 /** Colores de ficha; sus nombres están en `m.setup.finishes`, en el mismo orden. */
 const TOKEN_FINISH_HEX = ['#fbf8f3', '#d5a53c', '#d37d00', '#869830', '#87689b', '#c6007e'];
@@ -25,10 +28,14 @@ interface SetupModalProps {
   initialPlayers: PlayerConfig[];
   initialDifficulty: DifficultyLevel;
   initialMatchLength: MatchLength;
+  initialLayout: BoardLayout;
+  initialTheme: GameTheme;
   onStartGame: (
     players: PlayerConfig[],
     difficulty: DifficultyLevel,
     matchLength: MatchLength,
+    layout: BoardLayout,
+    theme: GameTheme,
   ) => void;
   onClose: () => void;
 }
@@ -38,6 +45,8 @@ export const SetupModal: React.FC<SetupModalProps> = ({
   initialPlayers,
   initialDifficulty,
   initialMatchLength,
+  initialLayout,
+  initialTheme,
   onStartGame,
   onClose,
 }) => {
@@ -47,6 +56,8 @@ export const SetupModal: React.FC<SetupModalProps> = ({
     useState<DifficultyLevel>(initialDifficulty);
   const [matchLength, setMatchLength] =
     useState<MatchLength>(initialMatchLength);
+  const [layout, setLayout] = useState<BoardLayout>(initialLayout);
+  const [theme, setTheme] = useState<GameTheme>(initialTheme);
   const [drafts, setDrafts] = useState<PlayerConfig[]>(() =>
     BASE_DEFAULTS.map((b, i) => initialPlayers[i] ?? { ...b, name: m.defaultPlayer(i + 1) }),
   );
@@ -55,6 +66,8 @@ export const SetupModal: React.FC<SetupModalProps> = ({
     if (open) {
       setDifficulty(initialDifficulty);
       setMatchLength(initialMatchLength);
+      setLayout(initialLayout);
+      setTheme(initialTheme);
       setCount(initialPlayers.length || 2);
       setDrafts(
         BASE_DEFAULTS.map(
@@ -62,7 +75,7 @@ export const SetupModal: React.FC<SetupModalProps> = ({
         ),
       );
     }
-  }, [open, initialDifficulty, initialMatchLength, initialPlayers, m]);
+  }, [open, initialDifficulty, initialMatchLength, initialLayout, initialTheme, initialPlayers, m]);
 
   if (!open) return null;
 
@@ -77,7 +90,7 @@ export const SetupModal: React.FC<SetupModalProps> = ({
       ...p,
       name: p.name.trim() || m.defaultPlayer(i + 1),
     }));
-    onStartGame(active, difficulty, matchLength);
+    onStartGame(active, difficulty, matchLength, layout, theme);
   };
 
 
@@ -107,6 +120,58 @@ export const SetupModal: React.FC<SetupModalProps> = ({
         </div>
 
         <div className="flex-1 overflow-y-auto custom-scroll p-6 space-y-5">
+          {/* Forma del tablero y modo de color, como en los imprimibles */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <div className="flex items-center gap-1.5 text-xs font-medium text-ink-400 mb-2">
+                <Square className="w-3.5 h-3.5 text-gold-400" />
+                <span>{m.setup.board}</span>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                {BOARD_LAYOUTS.map((id) => (
+                  <button
+                    key={id}
+                    type="button"
+                    onClick={() => setLayout(id)}
+                    aria-pressed={layout === id}
+                    className={`py-2 px-3 rounded-lg text-sm font-medium border transition-colors flex items-center justify-center gap-1.5 ${
+                      layout === id
+                        ? 'bg-gold-400 text-ink-950 border-gold-300 font-semibold'
+                        : 'bg-raised text-ink-300 border-white/10 hover:border-white/25'
+                    }`}
+                  >
+                    {id === 'square' ? <Square className="w-3.5 h-3.5" /> : <Circle className="w-3.5 h-3.5" />}
+                    {id === 'square' ? m.setup.square : m.setup.circle}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div>
+              <div className="flex items-center gap-1.5 text-xs font-medium text-ink-400 mb-2">
+                <SunMoon className="w-3.5 h-3.5 text-gold-400" />
+                <span>{m.setup.theme}</span>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                {(['dark', 'light'] as GameTheme[]).map((id) => (
+                  <button
+                    key={id}
+                    type="button"
+                    onClick={() => setTheme(id)}
+                    aria-pressed={theme === id}
+                    className={`py-2 px-3 rounded-lg text-sm font-medium border transition-colors flex items-center justify-center gap-1.5 ${
+                      theme === id
+                        ? 'bg-gold-400 text-ink-950 border-gold-300 font-semibold'
+                        : 'bg-raised text-ink-300 border-white/10 hover:border-white/25'
+                    }`}
+                  >
+                    {id === 'dark' ? <Moon className="w-3.5 h-3.5" /> : <Sun className="w-3.5 h-3.5" />}
+                    {id === 'dark' ? m.setup.dark : m.setup.light}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
           {/* Match Length Selector */}
           <div>
             <div className="flex items-center gap-1.5 text-xs font-medium text-ink-400 mb-2">

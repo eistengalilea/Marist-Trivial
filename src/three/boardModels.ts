@@ -26,7 +26,7 @@ export interface TileVisual {
   hitMesh: THREE.Mesh;
   faceMesh: THREE.Mesh;
   bezelMat: THREE.MeshStandardMaterial;
-  faceMat: THREE.MeshPhysicalMaterial;
+  faceMat: THREE.MeshBasicMaterial;
   highlightRing: THREE.Mesh;
   beaconGroup: THREE.Group;
   baseY: number;
@@ -52,6 +52,18 @@ export interface CardCaddyVisual {
 export function getSpaceSurfaceY(space: BoardSpace): number {
   if (space.kind === 'hub' || space.kind === 'hq') return 0.22;
   return 0.16;
+}
+
+/** Anillo circular extruido, equivalente a `createSquareRingGeometry`. */
+function createCircleRingGeometry(outerR: number, innerR: number, depth: number): THREE.ExtrudeGeometry {
+  const shape = new THREE.Shape();
+  shape.absarc(0, 0, outerR, 0, Math.PI * 2, false);
+  const hole = new THREE.Path();
+  hole.absarc(0, 0, innerR, 0, Math.PI * 2, true);
+  shape.holes.push(hole);
+  const geo = new THREE.ExtrudeGeometry(shape, { depth, bevelEnabled: false, curveSegments: 96 });
+  geo.rotateX(-Math.PI / 2);
+  return geo;
 }
 
 function createSquareRingGeometry(
@@ -225,8 +237,16 @@ export function buildBoardAssembly(maxAnisotropy: number): {
   boardGroup.add(boardShadow);
 
   // 2. Sculpted Square Walnut Plinth Base (multi-tier stepped molding)
+  const isCircle = TRIVIAL_BOARD.layout === 'circle';
+  // En el tablero circular los anillos van en círculo; en el cuadrado, en cuadrado.
+  const ring = (outer: number, inner: number, depth: number, bevel = 0) =>
+    isCircle
+      ? createCircleRingGeometry(outer, inner, depth)
+      : createSquareRingGeometry(outer, inner, depth, bevel);
   const plinthLowerGeo = track(
-    new RoundedBoxGeometry(23.1, 0.24, 23.1, 4, 0.14),
+    isCircle
+      ? new THREE.CylinderGeometry(11.85, 11.85, 0.24, 96)
+      : new RoundedBoxGeometry(23.1, 0.24, 23.1, 4, 0.14),
   );
   const plinthLower = new THREE.Mesh(plinthLowerGeo, walnutMat);
   plinthLower.position.y = -0.24;
@@ -235,7 +255,9 @@ export function buildBoardAssembly(maxAnisotropy: number): {
   boardGroup.add(plinthLower);
 
   const plinthUpperGeo = track(
-    new RoundedBoxGeometry(22.5, 0.22, 22.5, 4, 0.12),
+    isCircle
+      ? new THREE.CylinderGeometry(11.55, 11.55, 0.22, 96)
+      : new RoundedBoxGeometry(22.5, 0.22, 22.5, 4, 0.12),
   );
   const plinthUpper = new THREE.Mesh(plinthUpperGeo, walnutMat);
   plinthUpper.position.y = -0.07;
@@ -244,7 +266,7 @@ export function buildBoardAssembly(maxAnisotropy: number): {
   boardGroup.add(plinthUpper);
 
   // Raised walnut perimeter frame lip
-  const rimFrameGeo = track(createSquareRingGeometry(11.18, 10.56, 0.1, 0.18));
+  const rimFrameGeo = track(isCircle ? ring(11.45, 10.86, 0.1) : ring(11.18, 10.56, 0.1, 0.18));
   const rimFrameMesh = new THREE.Mesh(rimFrameGeo, walnutMat);
   rimFrameMesh.position.y = 0.02;
   rimFrameMesh.castShadow = true;
@@ -252,7 +274,11 @@ export function buildBoardAssembly(maxAnisotropy: number): {
   boardGroup.add(rimFrameMesh);
 
   // Recessed dark felt square deck
-  const feltDeckGeo = track(new THREE.BoxGeometry(21.15, 0.04, 21.15));
+  const feltDeckGeo = track(
+    isCircle
+      ? new THREE.CylinderGeometry(10.95, 10.95, 0.04, 96)
+      : new THREE.BoxGeometry(21.15, 0.04, 21.15),
+  );
   const feltDeckMesh = new THREE.Mesh(feltDeckGeo, feltMat);
   // Cara superior en y=0.06: por encima del zócalo de nogal (y=0.04) para
   // evitar z-fighting, y por debajo de las vías (y≈0.07).
@@ -262,7 +288,7 @@ export function buildBoardAssembly(maxAnisotropy: number): {
 
   // Brushed brass outer square bezel frame
   const outerBrassFrameGeo = track(
-    createSquareRingGeometry(10.94, 10.82, 0.05, 0.12),
+    isCircle ? ring(11.22, 11.1, 0.05) : ring(10.94, 10.82, 0.05, 0.12),
   );
   const outerBrassFrame = new THREE.Mesh(outerBrassFrameGeo, brassMat);
   outerBrassFrame.position.y = 0.08;
@@ -270,32 +296,35 @@ export function buildBoardAssembly(maxAnisotropy: number): {
   boardGroup.add(outerBrassFrame);
 
   // Square Perimeter Track Bed & Inner/Outer Brass Square Rails
-  const outerTrackGeo = track(createSquareRingGeometry(10.42, 8.78, 0.045, 0.06));
+  const outerTrackGeo = track(isCircle ? ring(10.78, 9.12, 0.045) : ring(10.42, 8.78, 0.045, 0.06));
   const outerTrackMesh = new THREE.Mesh(outerTrackGeo, darkSlateMat);
   outerTrackMesh.position.y = 0.025;
   outerTrackMesh.receiveShadow = true;
   boardGroup.add(outerTrackMesh);
 
   const trackOuterBrassGeo = track(
-    createSquareRingGeometry(10.44, 10.36, 0.04, 0.06),
+    isCircle ? ring(10.8, 10.72, 0.04) : ring(10.44, 10.36, 0.04, 0.06),
   );
   const trackOuterBrass = new THREE.Mesh(trackOuterBrassGeo, brassMat);
   trackOuterBrass.position.y = 0.045;
   boardGroup.add(trackOuterBrass);
 
-  const trackInnerBrassGeo = track(createSquareRingGeometry(8.84, 8.76, 0.04));
+  const trackInnerBrassGeo = track(isCircle ? ring(9.18, 9.1, 0.04) : ring(8.84, 8.76, 0.04));
   const trackInnerBrass = new THREE.Mesh(trackInnerBrassGeo, brassMat);
   trackInnerBrass.position.y = 0.045;
   boardGroup.add(trackInnerBrass);
 
   // Brass corner accent studs on the outer square bezel
   const studGeo = track(new THREE.CylinderGeometry(0.11, 0.11, 0.05, 16));
-  [
-    [-10.88, -10.88],
-    [10.88, -10.88],
-    [10.88, 10.88],
-    [-10.88, 10.88],
-  ].forEach(([sx, sz]) => {
+  (isCircle
+    ? SQUARE_SPOKE_ENDPOINTS.map((ep) => [Math.cos(ep.angle) * 11.16, Math.sin(ep.angle) * 11.16])
+    : [
+        [-10.88, -10.88],
+        [10.88, -10.88],
+        [10.88, 10.88],
+        [-10.88, 10.88],
+      ]
+  ).forEach(([sx, sz]) => {
     const stud = new THREE.Mesh(studGeo, brassMat);
     stud.position.set(sx, 0.11, sz);
     boardGroup.add(stud);
@@ -377,12 +406,9 @@ export function buildBoardAssembly(maxAnisotropy: number): {
         new THREE.CircleGeometry(BOARD_DIMENSIONS.hubRadius - 0.02, 64),
       );
       const hubFaceMat = track(
-        new THREE.MeshPhysicalMaterial({
+        new THREE.MeshBasicMaterial({
           map: hubTex,
-          roughness: 0.38,
-          metalness: 0.0,
-          clearcoat: 0.35,
-          clearcoatRoughness: 0.35,
+          toneMapped: false,
           polygonOffset: true,
           polygonOffsetFactor: -1,
           polygonOffsetUnits: -1,
@@ -461,14 +487,12 @@ export function buildBoardAssembly(maxAnisotropy: number): {
           ? hqTileTextures[space.category!]
           : catTileTextures[space.category!];
 
+    // Sin iluminación ni mapeo de tonos: la cara de la casilla muestra los
+    // colores exactos del tablero imprimible (las luces los lavaban).
     const faceMat = track(
-      new THREE.MeshPhysicalMaterial({
+      new THREE.MeshBasicMaterial({
         map: faceTex,
-        // Menos barniz: desde la vista cenital el reflejo lavaba los colores
-        roughness: 0.38,
-        metalness: 0.0,
-        clearcoat: 0.35,
-        clearcoatRoughness: 0.35,
+        toneMapped: false,
         polygonOffset: true,
         polygonOffsetFactor: -1,
         polygonOffsetUnits: -1,

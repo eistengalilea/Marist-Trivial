@@ -34,7 +34,7 @@ export const BRAND_FONTS = {
 } as const;
 
 /** Tokens semánticos usados por la escena Three.js (números hex). */
-export const SCENE_COLORS = {
+const SCENE_COLORS_DARK = {
   night: 0x17132a, // fondo y niebla (azul oscuro MarCha en sombra)
   tableFelt: '#1c1733',
   deckFelt: '#241e3d',
@@ -58,7 +58,35 @@ export const SCENE_COLORS = {
   dieBody: 0xfbf8f3,
   diePip: 0x312a4e,
   dieOnePip: 0xd37d00,
-} as const;
+};
+
+export type GameTheme = 'dark' | 'light';
+
+/**
+ * Modo claro: el mismo tablero que la versión imprimible con fondo blanco
+ * (tapete blanco, vías en lila muy claro y casillas de color iguales).
+ */
+const SCENE_COLORS_LIGHT: typeof SCENE_COLORS_DARK = {
+  ...SCENE_COLORS_DARK,
+  night: 0xe9e5f0,
+  tableFelt: '#d9d3e4',
+  deckFelt: '#fbf8f3',
+  trackBed: 0xe2daec,
+  hemiSky: 0xffffff,
+  hemiGround: 0x8f86a3,
+  tokenTray: 0xd9d3e4,
+};
+
+/**
+ * Colores activos de la escena. Se sustituyen en el sitio con
+ * `applySceneTheme` antes de construir la escena.
+ */
+export const SCENE_COLORS: typeof SCENE_COLORS_DARK = { ...SCENE_COLORS_DARK };
+
+export function applySceneTheme(theme: GameTheme): void {
+  Object.assign(SCENE_COLORS, theme === 'light' ? SCENE_COLORS_LIGHT : SCENE_COLORS_DARK);
+}
+
 
 /** Colores CSS usados al pintar texturas en canvas. */
 export const CANVAS_COLORS = {

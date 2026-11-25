@@ -139,7 +139,12 @@ export const BOARD_DIMENSIONS = {
   squareHalfSpan: 9.6, // Outer square center-line half-width (-9.6 .. +9.6)
   squareStep: 1.6, // 12 steps per side = 48 perimeter spaces
   boardOuterHalf: 11.45, // Walnut plinth outer half-width
+  circleRadius: 9.95, // Radio del circuito exterior en el tablero circular
 };
+
+/** Forma del tablero, igual que en los materiales imprimibles. */
+export type BoardLayout = 'square' | 'circle';
+export const BOARD_LAYOUTS: BoardLayout[] = ['square', 'circle'];
 
 /**
  * Returns (x, z) and tile orientation angle for index `r` (0..47) along the
@@ -153,63 +158,96 @@ function getSquarePerimeterCoords(r: number): {
   const S = BOARD_DIMENSIONS.squareHalfSpan;
   const step = BOARD_DIMENSIONS.squareStep;
 
-  if (r < 12) {
-    // Top edge: (-S, -S) -> (+S, -S)
-    return { x: -S + r * step, z: -S, tileYaw: 0 };
-  }
-  if (r < 24) {
-    // Right edge: (+S, -S) -> (+S, +S)
-    return { x: S, z: -S + (r - 12) * step, tileYaw: Math.PI / 2 };
-  }
-  if (r < 36) {
-    // Bottom edge: (+S, +S) -> (-S, +S)
-    return { x: S - (r - 24) * step, z: S, tileYaw: Math.PI };
-  }
-  // Left edge: (-S, +S) -> (-S, -S)
+  if (r < 12) return { x: -S + r * step, z: -S, tileYaw: 0 };
+  if (r < 24) return { x: S, z: -S + (r - 12) * step, tileYaw: Math.PI / 2 };
+  if (r < 36) return { x: S - (r - 24) * step, z: S, tileYaw: Math.PI };
   return { x: -S, z: S - (r - 36) * step, tileYaw: -Math.PI / 2 };
 }
 
-export const SQUARE_HQ_PERIMETER_INDICES = [0, 8, 16, 24, 32, 40] as const;
+/** Casillas del circuito circular: 48 posiciones; sedes en 30°, 90°, 150°… */
+function getCirclePerimeterCoords(r: number): { x: number; z: number; tileYaw: number } {
+  const R = BOARD_DIMENSIONS.circleRadius;
+  const a = -Math.PI / 3 + (r * 2 * Math.PI) / 48;
+  return { x: Math.cos(a) * R, z: Math.sin(a) * R, tileYaw: a + Math.PI / 2 };
+}
 
-export const SQUARE_SPOKE_ENDPOINTS: Array<{
+interface LayoutSpec {
+  coords: (r: number) => { x: number; z: number; tileYaw: number };
+  /** Índices del circuito donde están las 6 sedes, en el orden de CATEGORY_ORDER. */
+  hq: number[];
+  roll: number[];
+  /** Colores de las 36 casillas de color del circuito, en orden. */
+  ringColors: CategoryColorId[];
+}
+
+function squareRingColors(hq: number[], roll: number[]): CategoryColorId[] {
+  const special = new Map<number, CategoryColorId | null>();
+  hq.forEach((r, i) => special.set(r, CATEGORY_ORDER[i]));
+  roll.forEach((r) => special.set(r, null));
+  const colored = Array.from({ length: 48 }, (_, r) => r).filter((r) => !special.has(r));
+  // 6 de cada color en secuencia, evitando que una casilla toque la sede de su mismo color
+  for (let off = 0; off < 6; off++) {
+    const seq = colored.map((_, k) => CATEGORY_ORDER[(k + off) % 6]);
+    const ok = colored.every((r, k) =>
+      [(r + 47) % 48, (r + 1) % 48].every((nb) => special.get(nb) !== seq[k]),
+    );
+    if (ok) return seq;
+  }
+  return colored.map((_, k) => CATEGORY_ORDER[k % 6]);
+}
+
+function layoutSpec(layout: BoardLayout): LayoutSpec {
+  if (layout === 'square') {
+    // Sedes en las 4 esquinas y en el centro de los laterales izquierdo y derecho
+    const hq = [0, 12, 18, 24, 36, 42];
+    const roll = [6, 15, 21, 30, 39, 45];
+    return { coords: getSquarePerimeterCoords, hq, roll, ringColors: squareRingColors(hq, roll) };
+  }
+  // Circular: una sede cada 8 casillas, «vuelve a tirar» en medio de cada tramo
+  const hq = [0, 8, 16, 24, 32, 40];
+  const roll = hq.map((r) => r + 4);
+  const ringColors: CategoryColorId[] = [];
+  for (let arc = 0; arc < 6; arc++) {
+    const rot = [...CATEGORY_ORDER.slice(arc), ...CATEGORY_ORDER.slice(0, arc)];
+    ringColors.push(...rot);
+  }
+  return { coords: getCirclePerimeterCoords, hq, roll, ringColors };
+}
+
+export interface SpokeEndpoint {
   x: number;
   z: number;
   angle: number;
   length: number;
-}> = SQUARE_HQ_PERIMETER_INDICES.map((rIdx) => {
-  const { x, z } = getSquarePerimeterCoords(rIdx);
-  return {
-    x,
-    z,
-    angle: Math.atan2(z, x),
-    length: Math.hypot(x, z),
-  };
-});
+}
 
 /**
- * Generates the symmetrical 79-space Square Trivial board topology:
+ * Extremos de los 6 radios (centro → sede) del tablero activo. Se actualiza
+ * en el sitio al cambiar de forma, por eso es un array mutable.
+ */
+export const SQUARE_SPOKE_ENDPOINTS: SpokeEndpoint[] = [];
+
+/**
+ * Builds the 79-space board for a layout:
  * - 1 Central Hub ('hub') at (0, 0)
- * - 48 Square Perimeter spaces (12 per side):
- *     - 6 HQ Wedge spaces at indices 0, 8, 16, 24, 32, 40 (including corners 0 and 24)
- *     - 6 'roll_again' spaces at indices 4, 12, 20, 28, 36, 44 (including corners 12 and 36)
- *     - 36 Colored Square Ring spaces (6 per 8-step segment, 6 of each color)
+ * - 48 perimeter spaces: 6 HQs, 6 'roll_again' and 36 coloured (6 per colour)
  * - 30 Radial Spoke spaces (6 straight spokes × 5 steps from Hub to each HQ)
- * Total = 1 + 48 + 30 = 79 spaces.
  * Each of the 6 colors appears on exactly 12 spaces (1 HQ + 6 perimeter + 5 spoke).
  */
-export function buildTrivialBoard(): {
+export function buildTrivialBoard(layout: BoardLayout = 'square'): {
   spaces: BoardSpace[];
   spaceMap: Map<string, BoardSpace>;
+  spokeEndpoints: SpokeEndpoint[];
 } {
   const spaces: BoardSpace[] = [];
   const spaceMap = new Map<string, BoardSpace>();
+  const spec = layoutSpec(layout);
 
   const register = (space: BoardSpace) => {
     spaces.push(space);
     spaceMap.set(space.id, space);
   };
 
-  // 1. Central Hub
   register({
     id: 'hub',
     kind: 'hub',
@@ -224,105 +262,74 @@ export function buildTrivialBoard(): {
     label: 'Casilla Central',
   });
 
-  // 2. 48 Square Perimeter Spaces (6 HQs + 6 Roll Again + 36 Colored)
+  // Circuito exterior, en orden (los ids de sede son hq_0..hq_5)
   const ringIds: string[] = [];
-
-  for (let arc = 0; arc < 6; arc++) {
-    const hqRingIdx = arc * 8;
-    const hqCat = CATEGORY_ORDER[arc];
-    const hqCoords = getSquarePerimeterCoords(hqRingIdx);
-    const hqId = `hq_${arc}`;
-    ringIds.push(hqId);
-
-    register({
-      id: hqId,
-      kind: 'hq',
-      category: hqCat,
-      position: [hqCoords.x, 0, hqCoords.z],
-      angle: hqCoords.tileYaw,
-      radius: Math.hypot(hqCoords.x, hqCoords.z),
+  let colorCursor = 0;
+  for (let r = 0; r < 48; r++) {
+    const c = spec.coords(r);
+    const base = {
+      position: [c.x, 0, c.z] as [number, number, number],
+      angle: c.tileYaw,
+      radius: Math.hypot(c.x, c.z),
       neighbors: [],
-      spokeIndex: arc,
-      spokeStep: 6,
-      ringIndex: hqRingIdx,
-      label: `Sede de Quesito · ${CATEGORIES[hqCat].shortName}`,
-    });
-
-    // 7 spaces between hq_arc and hq_{(arc+1)%6}:
-    // sub = 4 is Roll Again; sub = 1,2,3,5,6,7 hold all 6 colors rotated per arc
-    const rotatedColors = [
-      ...CATEGORY_ORDER.slice(arc),
-      ...CATEGORY_ORDER.slice(0, arc),
-    ];
-    let colorCursor = 0;
-
-    for (let sub = 1; sub <= 7; sub++) {
-      const rIdx = hqRingIdx + sub;
-      const coords = getSquarePerimeterCoords(rIdx);
-      const id = `ring_${rIdx}`;
-      ringIds.push(id);
-
-      if (sub === 4) {
-        register({
-          id,
-          kind: 'roll_again',
-          category: null,
-          position: [coords.x, 0, coords.z],
-          angle: coords.tileYaw,
-          radius: Math.hypot(coords.x, coords.z),
-          neighbors: [],
-          spokeIndex: null,
-          spokeStep: null,
-          ringIndex: rIdx,
-          label: 'Vuelve a tirar',
-        });
-      } else {
-        const cat = rotatedColors[colorCursor++];
-        register({
-          id,
-          kind: 'ring',
-          category: cat,
-          position: [coords.x, 0, coords.z],
-          angle: coords.tileYaw,
-          radius: Math.hypot(coords.x, coords.z),
-          neighbors: [],
-          spokeIndex: null,
-          spokeStep: null,
-          ringIndex: rIdx,
-          label: `Casilla Exterior · ${CATEGORIES[cat].shortName}`,
-        });
-      }
+      spokeStep: null,
+      ringIndex: r,
+    };
+    const hqIdx = spec.hq.indexOf(r);
+    if (hqIdx >= 0) {
+      const cat = CATEGORY_ORDER[hqIdx];
+      register({
+        ...base,
+        id: `hq_${hqIdx}`,
+        kind: 'hq',
+        category: cat,
+        spokeIndex: hqIdx,
+        spokeStep: 6,
+        label: `Sede de Quesito · ${CATEGORIES[cat].shortName}`,
+      });
+      ringIds.push(`hq_${hqIdx}`);
+    } else if (spec.roll.includes(r)) {
+      register({ ...base, id: `ring_${r}`, kind: 'roll_again', category: null, spokeIndex: null, label: 'Vuelve a tirar' });
+      ringIds.push(`ring_${r}`);
+    } else {
+      const cat = spec.ringColors[colorCursor++];
+      register({
+        ...base,
+        id: `ring_${r}`,
+        kind: 'ring',
+        category: cat,
+        spokeIndex: null,
+        label: `Casilla Exterior · ${CATEGORIES[cat].shortName}`,
+      });
+      ringIds.push(`ring_${r}`);
     }
   }
 
-  // 3. 6 Straight Radial Spokes (5 spaces each = 30 spaces)
+  // 6 radios rectos de 5 casillas, repartidas a la misma distancia
+  const spokeEndpoints: SpokeEndpoint[] = [];
   for (let i = 0; i < 6; i++) {
-    const endpoint = SQUARE_SPOKE_ENDPOINTS[i];
-    const isCornerSpoke = i === 0 || i === 3;
-    const fractions = isCornerSpoke
-      ? [0.22, 0.37, 0.52, 0.67, 0.82]
-      : [0.25, 0.4, 0.55, 0.7, 0.85];
+    const hq = spaceMap.get(`hq_${i}`)!;
+    const [ex, , ez] = hq.position;
+    const length = Math.hypot(ex, ez);
+    const angle = Math.atan2(ez, ex);
+    spokeEndpoints.push({ x: ex, z: ez, angle, length });
 
     const otherColors = CATEGORY_ORDER.filter((_, idx) => idx !== i);
     const offset = i % 5;
-    const spokeColors = [
-      ...otherColors.slice(offset),
-      ...otherColors.slice(0, offset),
-    ];
+    const spokeColors = [...otherColors.slice(offset), ...otherColors.slice(0, offset)];
+    const d0 = BOARD_DIMENSIONS.hubRadius + 0.95;
+    const d1 = length - 1.3;
 
     for (let step = 1; step <= 5; step++) {
-      const frac = fractions[step - 1];
-      const x = endpoint.x * frac;
-      const z = endpoint.z * frac;
+      const d = d0 + ((d1 - d0) * (step - 1)) / 4;
       const cat = spokeColors[step - 1];
-
       register({
         id: `spoke_${i}_${step}`,
         kind: 'spoke',
         category: cat,
-        position: [x, 0, z],
-        angle: endpoint.angle,
-        radius: endpoint.length * frac,
+        position: [Math.cos(angle) * d, 0, Math.sin(angle) * d],
+        angle,
+        radius: d,
         neighbors: [],
         spokeIndex: i,
         spokeStep: step,
@@ -332,7 +339,6 @@ export function buildTrivialBoard(): {
     }
   }
 
-  // 4. Bidirectional Graph Edges
   const link = (aId: string, bId: string) => {
     const a = spaceMap.get(aId);
     const b = spaceMap.get(bId);
@@ -343,20 +349,35 @@ export function buildTrivialBoard(): {
 
   for (let i = 0; i < 6; i++) {
     link('hub', `spoke_${i}_1`);
-    for (let step = 1; step < 5; step++) {
-      link(`spoke_${i}_${step}`, `spoke_${i}_${step + 1}`);
-    }
+    for (let step = 1; step < 5; step++) link(`spoke_${i}_${step}`, `spoke_${i}_${step + 1}`);
     link(`spoke_${i}_5`, `hq_${i}`);
   }
+  for (let r = 0; r < ringIds.length; r++) link(ringIds[r], ringIds[(r + 1) % ringIds.length]);
 
-  for (let r = 0; r < ringIds.length; r++) {
-    link(ringIds[r], ringIds[(r + 1) % ringIds.length]);
-  }
-
-  return { spaces, spaceMap };
+  return { spaces, spaceMap, spokeEndpoints };
 }
 
-export const TRIVIAL_BOARD = buildTrivialBoard();
+/**
+ * Tablero activo. Es un único objeto cuyo contenido se sustituye en el sitio
+ * con `setBoardLayout`, así todos los módulos que lo importan ven el cambio.
+ */
+export const TRIVIAL_BOARD: {
+  layout: BoardLayout;
+  spaces: BoardSpace[];
+  spaceMap: Map<string, BoardSpace>;
+} = { layout: 'square', spaces: [], spaceMap: new Map() };
+
+export function setBoardLayout(layout: BoardLayout): void {
+  const built = buildTrivialBoard(layout);
+  TRIVIAL_BOARD.layout = layout;
+  TRIVIAL_BOARD.spaces.length = 0;
+  TRIVIAL_BOARD.spaces.push(...built.spaces);
+  TRIVIAL_BOARD.spaceMap.clear();
+  built.spaceMap.forEach((v, k) => TRIVIAL_BOARD.spaceMap.set(k, v));
+  SQUARE_SPOKE_ENDPOINTS.length = 0;
+  SQUARE_SPOKE_ENDPOINTS.push(...built.spokeEndpoints);
+  distanceCache.delete(TRIVIAL_BOARD.spaceMap);
+}
 
 /**
  * Finds all valid destinations at exact distance `steps` from `startSpaceId`
@@ -444,6 +465,8 @@ export function shortestGraphDistance(
   }
   return fromDistances.get(toId) ?? Infinity;
 }
+
+setBoardLayout('square');
 
 export function countPlayerWedges(wedges: Record<CategoryColorId, boolean>): number {
   return CATEGORY_ORDER.reduce((acc, c) => acc + (wedges[c] ? 1 : 0), 0);

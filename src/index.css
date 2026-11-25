@@ -138,3 +138,28 @@
     transition-duration: 0.01ms;
   }
 }
+
+/*
+ * Modo claro (como la versión imprimible con fondo blanco). Se invierten los
+ * neutros: lo que en modo oscuro es texto claro pasa a ser azul oscuro MarCha,
+ * y los paneles pasan a blanco. `white` se reasigna para que los textos y
+ * velos «blancos» de la interfaz sigan contrastando sobre fondo claro.
+ */
+:root[data-theme='light'] {
+  --color-night: #e9e5f0;
+  --color-panel: #ffffff;
+  --color-raised: #f1edf6;
+  --color-raised-hover: #e6e0ee;
+  --color-sunken: #e9e5f0;
+
+  --color-white: #241e3d;
+  --color-ink-50: #1c1733;
+  --color-ink-100: #241e3d;
+  --color-ink-200: #312a4e;
+  --color-ink-300: #463e5e;
+  --color-ink-400: #5d5378;
+  --color-ink-500: #6f6589;
+  --color-ink-600: #9c92b5;
+  --color-ink-700: #d8d3e5;
+  color-scheme: light;
+}
