@@ -151,9 +151,12 @@ def sheet(nums, backside):
     o.append(f'<text x="{AW/2}" y="{AH-3}" class="r" font-size="2.4" fill="#888" text-anchor="middle">Marist Trivial · {t['cards']} {nums[0]:02d}–{nums[-1]:02d} · {lab}</text>')
     return ''.join(o)
 
+def ncards():
+    return min(len(by[c]) for c in ORDER)
+
 def check():
     bad = []
-    for n in range(1, 21):
+    for n in range(1, ncards() + 1):
         for q in [by[c][n-1] for c in ORDER]:
             for fn in (front_block, back_block):
                 b = fn(q, 0.78)
@@ -161,10 +164,10 @@ def check():
     return bad
 
 def sheets():
-    """Devuelve lista de (nombre, svg) con 5 hojas × 2 caras."""
+    """Devuelve lista de (nombre, svg): una hoja (2 caras) por cada 4 tarjetas."""
     out = []
-    for k in range(5):
-        nums = list(range(k*4+1, k*4+5))
-        out.append((f'{k+1}a', svg_doc(AW, AH, sheet(nums, False), f'Marist Trivial · {t["cards"]} {nums[0]:02d}-{nums[-1]:02d} · A')))
-        out.append((f'{k+1}b', svg_doc(AW, AH, sheet(nums, True), f'Marist Trivial · {t["cards"]} {nums[0]:02d}-{nums[-1]:02d} · B')))
+    for k in range((ncards() + 3) // 4):
+        nums = list(range(k*4+1, min(k*4+5, ncards()+1)))
+        out.append((f'{k+1:02d}a', svg_doc(AW, AH, sheet(nums, False), f'Marist Trivial · {t["cards"]} {nums[0]:02d}-{nums[-1]:02d} · A')))
+        out.append((f'{k+1:02d}b', svg_doc(AW, AH, sheet(nums, True), f'Marist Trivial · {t["cards"]} {nums[0]:02d}-{nums[-1]:02d} · B')))
     return out
