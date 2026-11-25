@@ -21,7 +21,7 @@ import {
   findValidMoves,
   shortestGraphDistance,
 } from './game/boardTopology';
-import { drawQuestionForColor } from './game/questions';
+import { createQuestionDecks, drawQuestionFromDeck } from './game/questions';
 import { soundFX } from './game/soundEffects';
 import type {
   ActiveChallenge,
@@ -63,7 +63,8 @@ function buildInitialPlayers(configs: PlayerConfig[]): PlayerState[] {
 export default function App() {
   const canvasMountRef = useRef<HTMLDivElement | null>(null);
   const sceneRef = useRef<TrivialSceneController | null>(null);
-  const usedQuestionIdsRef = useRef<Set<string>>(new Set());
+  /** Mazos barajados de la partida en curso: cada pregunta sale una sola vez. */
+  const questionDecksRef = useRef(createQuestionDecks());
 
   const [players, setPlayers] = useState<PlayerState[]>(() =>
     buildInitialPlayers(DEFAULT_PLAYERS),
@@ -121,16 +122,16 @@ export default function App() {
     matchLength,
   };
 
-  /** Saca una pregunta sin repetir y la marca como usada. */
-  const drawQuestion = useCallback((catId: CategoryColorId) => {
-    const q = drawQuestionForColor(
-      catId,
-      stateRef.current.difficulty,
-      usedQuestionIdsRef.current,
-    );
-    usedQuestionIdsRef.current.add(q.id);
-    return q;
-  }, []);
+  /** Saca la siguiente pregunta del mazo barajado de esa categoría. */
+  const drawQuestion = useCallback(
+    (catId: CategoryColorId) =>
+      drawQuestionFromDeck(
+        questionDecksRef.current,
+        catId,
+        stateRef.current.difficulty,
+      ),
+    [],
+  );
 
   const advanceTurn = useCallback((nextMessage?: string) => {
     // Se calcula fuera del actualizador de estado: los actualizadores deben
@@ -610,7 +611,7 @@ export default function App() {
     nextMatchLength: MatchLength,
   ) => {
     soundFX.playUiClick();
-    usedQuestionIdsRef.current.clear();
+    questionDecksRef.current = createQuestionDecks();
     const fresh = buildInitialPlayers(configs);
     setDifficulty(nextDifficulty);
     setMatchLength(nextMatchLength);
